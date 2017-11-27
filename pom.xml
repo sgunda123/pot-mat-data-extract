@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.reltio.cst</groupId>
-	<artifactId>data-extract</artifactId>
+	<artifactId>pot-mat-extract</artifactId>
 	<version>1.1.0</version>
 	<name>data-extract</name>
 
@@ -15,13 +15,9 @@
 		 <dependency>
             <groupId>com.reltio.cst</groupId>
             <artifactId>reltio-cst-core</artifactId>
-            <version>1.2.8</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/reltio-cst-core-1.2.8.jar</systemPath>
+            <version>1.3.7</version>
         </dependency>
         
-
-
 	</dependencies>
 
 	<build>
@@ -52,31 +48,10 @@
 							<descriptorRefs>
 								<descriptorRef>jar-with-dependencies</descriptorRef>
 							</descriptorRefs>
-							<finalName>${project.artifactId}-entity-ov-${project.version}</finalName>
+							<finalName>${project.artifactId}-${project.version}</finalName>
 							<archive>
 								<manifest>
-									<mainClass>com.reltio.extract.denormalized.service.AttributeExtractReport</mainClass>
-								</manifest>
-							</archive>
-						</configuration>
-
-						<!-- bind to the packaging phase -->
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>make-assembly-relation</id>
-						<configuration>
-							<!-- get all project dependencies -->
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<finalName>${project.artifactId}-entity-xref-${project.version}</finalName>
-							<archive>
-								<manifest>
-									<mainClass>com.reltio.extract.denormalized.service.XRefExtractReport</mainClass>
+									<mainClass>com.reltio.extract.denormalized.service.AttributeExtractReportForPotenMatchesV4</mainClass>
 								</manifest>
 							</archive>
 						</configuration>
@@ -96,7 +71,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 			</plugin>
 		</plugins>
+		
 	</build>
-
 
 </project>
