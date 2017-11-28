@@ -66,7 +66,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 			Properties properties = new Properties();
 			
 			try {
-				String propertyFilePath = args[0];
+				String propertyFilePath = args[0]; 
 				FileReader in = new FileReader(propertyFilePath);
 //				InputStream in = new AttributeExtractReportForPotenMatchesV4().getClass().getResourceAsStream("/dev-ov.properties");
 				properties.load(in);
