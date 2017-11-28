@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.Properties;
 
 import com.reltio.cst.util.GenericUtilityService;
-import com.reltio.extract.ExtractConstants;
+import com.reltio.*;
 
 /**
  *
@@ -34,6 +34,7 @@ public class ExtractProperties implements Serializable {
 	private String fileDelimiter;
 	private String serverHostName;
 	private String tenantId;
+	private String transitive_match;
 
 	private Integer threadCount;
 
@@ -55,6 +56,7 @@ public class ExtractProperties implements Serializable {
 		username = properties.getProperty("USERNAME");
 		password = properties.getProperty("PASSWORD");
 		isHeaderRequired = properties.getProperty("HEADER_REQUIRED");
+		setTransitive_match(properties.getProperty("TRANSITIVE_MATCH"));
 		fileFormat = properties.getProperty("FILE_FORMAT");
 		fileDelimiter = properties.getProperty("FILE_DELIMITER");
 
@@ -311,6 +313,14 @@ public class ExtractProperties implements Serializable {
 	 */
 	public void setThreadCount(Integer threadCount) {
 		this.threadCount = threadCount;
+	}
+
+	public String getTransitive_match() {
+		return transitive_match;
+	}
+
+	public void setTransitive_match(String transitive_match) {
+		this.transitive_match = transitive_match;
 	}
 
 }

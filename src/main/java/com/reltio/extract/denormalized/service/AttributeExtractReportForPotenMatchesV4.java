@@ -1,23 +1,20 @@
 package com.reltio.extract.denormalized.service;
 
-import static com.reltio.extract.ExtractConstants.ENCODING;
-import static com.reltio.extract.ExtractConstants.SCAN_URL;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -32,10 +29,10 @@ import com.reltio.cst.service.TokenGeneratorService;
 import com.reltio.cst.service.impl.SimpleReltioAPIServiceImpl;
 import com.reltio.cst.service.impl.TokenGeneratorServiceImpl;
 import com.reltio.extract.domain.Attribute;
-import com.reltio.extract.domain.BigMatch3;
+import com.reltio.extract.domain.BigMatch;
 import com.reltio.extract.domain.Configuration;
 import com.reltio.extract.domain.EntityTypes;
-import com.reltio.extract.ExtractConstants;
+import com.reltio.extract.domain.ExtractConstants;
 import com.reltio.extract.domain.ExtractProperties;
 import com.reltio.extract.domain.HObject;
 import com.reltio.extract.domain.InputAttribute;
@@ -46,11 +43,13 @@ import com.reltio.file.ReltioCSVFileWriter;
 import com.reltio.file.ReltioFileWriter;
 import com.reltio.file.ReltioFlatFileWriter;
 
+
+
 /**
  * 
  * This is the main class for generating the Extract Report
  * 
- * @author Ganesh
+ * @author Mohan
  * 
  */
 public class AttributeExtractReportForPotenMatchesV4 {
@@ -62,7 +61,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 		private static Map<Integer,String> matchLabel = null;
 		public static void main(String[] args) throws Exception {
 			
-			System.out.println("Process Started");
+			System.out.println("Extract Process Started..");
 			long programStartTime = System.currentTimeMillis();
 			Properties properties = new Properties();
 			
@@ -86,6 +85,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 					|| extractProperties.getOutputFilePath() == null
 					|| extractProperties.getUsername() == null
 					|| extractProperties.getPassword() == null
+					|| extractProperties.getTransitive_match() == null
 					|| extractProperties.getFileFormat() == null
 					|| extractProperties.getAuthUrl() == null
 					|| extractProperties.getThreadCount() == null) {
@@ -94,7 +94,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 				System.exit(0);
 			}
 
-			
+			final String matchType=extractProperties.getTransitive_match();
 			TokenGeneratorService tokenGeneratorService = new TokenGeneratorServiceImpl(
 					extractProperties.getUsername(),
 					extractProperties.getPassword(), extractProperties.getAuthUrl());
@@ -104,8 +104,8 @@ public class AttributeExtractReportForPotenMatchesV4 {
 			
 			String configRes = reltioAPIService.get(extractProperties.getApiUrl()+"/configuration/_noInheritance");
 			Configuration configObj = GSON.fromJson(configRes,Configuration.class);
-			matchUri = new HashMap<Integer,String>();
-			matchLabel= new HashMap<Integer,String>();
+			matchUri = new LinkedHashMap<Integer,String>();
+			matchLabel= new LinkedHashMap<Integer,String>();
 			
 			for (EntityTypes entT : configObj.getEntityTypes()) {
 				
@@ -115,8 +115,8 @@ public class AttributeExtractReportForPotenMatchesV4 {
 					if (entT.getMatchGroups() !=null && !entT.getMatchGroups().isEmpty())
 					for (Attribute attr : entT.getMatchGroups() ) {
 						i++;
-						matchUri.put(i,attr.getUri());
-						matchLabel.put(i,attr.getLabel());
+						 matchUri.put(Integer.valueOf(i), attr.getUri().trim());
+				            matchLabel.put(Integer.valueOf(i), attr.getLabel().trim());
 					}
 				}
 			}
@@ -134,9 +134,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 					&& !extractProperties.getOvAttrFilePath().equalsIgnoreCase(
 							"null")) {
 
-				BufferedReader reader = new BufferedReader(new InputStreamReader(
-						new FileInputStream(extractProperties.getOvAttrFilePath()),
-						ENCODING));
+				BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(extractProperties.getOvAttrFilePath()), "UTF-8"));
 				ExtractServiceUtil.createAttributeMapFromProperties(reader,
 						attributes);
 			}
@@ -149,8 +147,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 
 			// Create Response file header
 			for (Map.Entry<String, InputAttribute> attr : attributes.entrySet()) {
-				ExtractServiceUtil.createExtractNestedResponseHeader(attr,
-						fileResponseHeader, null);
+				ExtractServiceUtil.createExtractNestedResponseHeader(attr,fileResponseHeader, null);
 			}
 			
 			final ReltioFileWriter reltioFile;
@@ -179,7 +176,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 			
 			String[] matRuleHead= new String[1];
 			matRuleHead[0]="Rule";			
-			String[] finHeaderArray =ArrayUtils.addAll(matRuleHead, concatHeaderArray (responseHeader,responseHeader));
+			String[] finHeaderArray =(String[])ArrayUtils.addAll(matRuleHead, concatHeaderArray (responseHeader,responseHeader));
 			
 
 			if (extractProperties.getIsHeaderRequired() == null
@@ -190,6 +187,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 			final String apiUrl =  extractProperties.getApiUrl(); 
 			String filterUrl = "filter=equals(type,'configuration/entityTypes/"+extractProperties.getEntityType() +"') and range(matches,1,3000)";
 			final String scanUrl = apiUrl + "/entities/_scan?"+filterUrl+"&select=uri&max=100";
+//			final String scanUrl = apiUrl + "/entities/_scan?filter=equals(uri,'entities/YbhrbGy')&select=uri";
 			String incReportURLTotal = apiUrl + "/entities/_total?"+filterUrl;
 			System.out.println("Total=="+reltioAPIService.get(incReportURLTotal));  
 			System.out.println(scanUrl);
@@ -202,21 +200,17 @@ public class AttributeExtractReportForPotenMatchesV4 {
 		while (!eof) {
 			
 				// Doing the DBScan API Call here
-				String scanResponse = reltioAPIService.post(scanUrl,
-						intitialJSON);
+				String scanResponse = reltioAPIService.post(scanUrl,intitialJSON);
 
 				// Convert the string the java object
-				ScanResponse scanResponseObj = GSON.fromJson(scanResponse,
-						ScanResponse.class);
+				ScanResponse scanResponseObj = GSON.fromJson(scanResponse,ScanResponse.class);
 
-				if (scanResponseObj.getObjects() != null
-						&& scanResponseObj.getObjects().size() > 0) {						
+				if (scanResponseObj.getObjects() != null&& scanResponseObj.getObjects().size() > 0) {						
 					
 					count += scanResponseObj.getObjects().size();
 					System.out.println("Scaned records count = " + count);
 										
-					final List<ReltioObject> objectsToProcess = scanResponseObj
-							.getObjects();	
+					final List<ReltioObject> objectsToProcess = scanResponseObj.getObjects();	
 					
 					int threadNum = 0;
 								
@@ -229,11 +223,14 @@ public class AttributeExtractReportForPotenMatchesV4 {
 						public Long call() throws Exception {
 							long requestExecutionTime = 0l;
 							try {
-								long startTime = System.currentTimeMillis();
-								
-								
-								String getResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri +"/_matches");								
-								//String getResponse = reltioAPIService.get(apiUrl+"entities/2eR6BDw/_matches");
+								String getResponse ="";
+								if(matchType==null||matchType.equalsIgnoreCase("")||matchType.equalsIgnoreCase("false")){
+									getResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri +"/_matches?deep=1");								
+									
+								}else{
+									getResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri +"/_matches");								
+								}
+//								System.out.println(getResponse);
 								
 								if (getResponse !=null && getResponse.contains("uri")) {
 									
@@ -242,18 +239,17 @@ public class AttributeExtractReportForPotenMatchesV4 {
 									ReltioObject drivReltioObject = GSON.fromJson(drivGetResponse,ReltioObject.class);
 																
 									//System.out.println(getResponse);
-									Map<String, String> responseMap = getXrefResponse(
-											drivReltioObject, attributes);
+									Map<String, String> responseMap = getXrefResponse(drivReltioObject, attributes);
 									
-									String[] finalResponse = objectArrayToStringArray(filterMapToObjectArray(
-											responseMap, responseHeader));	
-									
-									for (int mu : matchUri.keySet() ) {
-										getResponse = getResponse.replaceAll(matchUri.get(mu),mu+"");
+									String[] finalResponse = objectArrayToStringArray(filterMapToObjectArray(responseMap, responseHeader));	
+								 
+									Set<Integer> keyset=matchUri.keySet();
+									for (int mu : keyset ) {
+										String quote = "\"";
+										getResponse = getResponse.replaceAll(quote + matchUri.get(mu)+quote , quote+mu+quote);
 									}
 									
-									
-									BigMatch3 mtch = GSON.fromJson(getResponse,new TypeToken<BigMatch3>(){}.getType());								
+									BigMatch mtch = GSON.fromJson(getResponse,new TypeToken<BigMatch>(){}.getType());								
 								
 									List<Map<String,List<HObject>>> hcoObjectListMap = getMatchName(mtch);
 									
@@ -268,11 +264,9 @@ public class AttributeExtractReportForPotenMatchesV4 {
 							    						
 							    						ReltioObject matchReltioObject=hco.object;
 						    						
-							    						Map<String, String> responseMatchMap = getXrefResponse(
-							    								matchReltioObject, attributes);
+							    						Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes);
 														
-														String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(
-																responseMatchMap, responseHeader));	
+														String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));	
 														
 														String[] matRule= new String[1];
 														matRule[0]=key;
@@ -364,15 +358,13 @@ public class AttributeExtractReportForPotenMatchesV4 {
 	}	
 
 	
-	public static Map<String, String> getXrefResponse(
-			ReltioObject reltioObject, Map<String, InputAttribute> attributes) {
+	public static Map<String, String> getXrefResponse(ReltioObject reltioObject, Map<String, InputAttribute> attributes) {
 
 			Map<String, String> responseMap = new HashMap<String, String>();
 			responseMap.put("ReltioURI", reltioObject.uri);
 
 			for (Map.Entry<String, InputAttribute> attr : attributes.entrySet()) {
-				List<Object> attributeData = reltioObject.attributes.get(attr
-						.getKey());
+				List<Object> attributeData = reltioObject.attributes.get(attr.getKey());
 				ExtractServiceUtil.createExtractOutputData(attr, attributeData, responseMap, null);
 			}	
 			
@@ -437,7 +429,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 	}
 
 	
-	public static List<Map<String,List<HObject>>> getMatchName(BigMatch3 mtch) {		
+	public static List<Map<String,List<HObject>>> getMatchName(BigMatch mtch) {		
 
 		List<Map<String,List<HObject>>> hcoObjectListMap = new ArrayList<Map<String,List<HObject>>>();
 		if( mtch.hcoObjectList1 != null && !mtch.hcoObjectList1.isEmpty() ){
