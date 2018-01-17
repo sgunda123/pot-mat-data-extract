@@ -1,1 +1,1 @@
-java -jar reltio-pm-extractReport-0.0.3.jar  job_configuration.properties > $logfilepath$
+java -jar reltio-pm-extractReport-0.0.3.jar  job_configuration.properties > $logfilepath$ 
