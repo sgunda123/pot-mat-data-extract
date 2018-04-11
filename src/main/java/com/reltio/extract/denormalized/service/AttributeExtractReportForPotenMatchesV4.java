@@ -76,8 +76,9 @@ public class AttributeExtractReportForPotenMatchesV4 {
 			}
 			
 			// READ the Properties values
-			final ExtractProperties extractProperties = new ExtractProperties(
+			 final ExtractProperties extractProperties = new ExtractProperties(
 					properties);
+
 
 			// VERIFY the required properties
 			if (extractProperties.getApiUrl() == null
@@ -90,7 +91,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 					|| extractProperties.getAuthUrl() == null
 					|| extractProperties.getThreadCount() == null) {
 				System.out
-						.println("Error::: one or more required parameters missing. Please verify the input properties File....");
+						.println("Error::: one or more required parameters missing. Please verify the input properties File...." );
 				System.exit(0);
 			}
 
@@ -120,8 +121,8 @@ public class AttributeExtractReportForPotenMatchesV4 {
 					}
 				}
 			}
-			
-			
+
+
 			int threadsNumber = extractProperties.getThreadCount();	
 			Integer count = 0;
 			Integer processedCount = 0;
@@ -137,6 +138,9 @@ public class AttributeExtractReportForPotenMatchesV4 {
 				BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(extractProperties.getOvAttrFilePath()), "UTF-8"));
 				ExtractServiceUtil.createAttributeMapFromProperties(reader,
 						attributes);
+
+
+
 			}
 			
 			final List<String> fileResponseHeader = new ArrayList<String>();
@@ -239,7 +243,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 									ReltioObject drivReltioObject = GSON.fromJson(drivGetResponse,ReltioObject.class);
 																
 									//System.out.println(getResponse);
-									Map<String, String> responseMap = getXrefResponse(drivReltioObject, attributes);
+									Map<String, String> responseMap = getXrefResponse(drivReltioObject, attributes, extractProperties );
 									
 									String[] finalResponse = objectArrayToStringArray(filterMapToObjectArray(responseMap, responseHeader));	
 								 
@@ -248,26 +252,29 @@ public class AttributeExtractReportForPotenMatchesV4 {
 										String quote = "\"";
 										getResponse = getResponse.replaceAll(quote + matchUri.get(mu)+quote , quote+mu+quote);
 									}
-									
+									//Has full record here
 									BigMatch mtch = GSON.fromJson(getResponse,new TypeToken<BigMatch>(){}.getType());								
 								
 									List<Map<String,List<HObject>>> hcoObjectListMap = getMatchName(mtch);
-									
+
 									if(hcoObjectListMap!= null && !hcoObjectListMap.isEmpty() ){
 						    			for (Map<String,List<HObject>> hcoObjsMap : hcoObjectListMap) {
 						    				for (String key : hcoObjsMap.keySet()) {
-						    					
+
 						    					if (key!=null ) {
 						    						
 						    						List<HObject> hcoObjs = hcoObjsMap.get(key);
+
 							    					for(HObject hco: hcoObjs){
-							    						
+
 							    						ReltioObject matchReltioObject=hco.object;
 						    						
-							    						Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes);
-														
+							    						Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes, extractProperties);
+
+														//System.out.println(getXrefResponse(matchReltioObject, attributes));
+														//Does not have all names here
 														String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));	
-														
+
 														String[] matRule= new String[1];
 														matRule[0]=key;
 														
@@ -358,14 +365,24 @@ public class AttributeExtractReportForPotenMatchesV4 {
 	}	
 
 	
-	public static Map<String, String> getXrefResponse(ReltioObject reltioObject, Map<String, InputAttribute> attributes) {
+	public static Map<String, String> getXrefResponse(ReltioObject reltioObject, Map<String, InputAttribute> attributes, ExtractProperties extractProperties) {
 
 			Map<String, String> responseMap = new HashMap<String, String>();
 			responseMap.put("ReltioURI", reltioObject.uri);
 
+
+
 			for (Map.Entry<String, InputAttribute> attr : attributes.entrySet()) {
 				List<Object> attributeData = reltioObject.attributes.get(attr.getKey());
-				ExtractServiceUtil.createExtractOutputData(attr, attributeData, responseMap, null);
+
+
+                boolean extractAllValues = false;
+                if (extractProperties.getExtractAllValues().equalsIgnoreCase("true")
+                        ) {
+                    extractAllValues = true;
+
+                }
+                ExtractServiceUtil.createExtractOutputData(attr, attributeData, responseMap, null, extractAllValues);
 			}	
 			
 		return responseMap;

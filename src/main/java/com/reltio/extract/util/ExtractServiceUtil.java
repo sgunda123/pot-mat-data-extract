@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.reltio.extract.util;
 
@@ -20,6 +20,7 @@ import com.reltio.extract.domain.XrefInputAttribute;
  *
  */
 public class ExtractServiceUtil {
+
 
 	public static void createAttributeMapFromProperties(BufferedReader reader,
 			Map<String, InputAttribute> attributes) throws IOException {
@@ -62,6 +63,11 @@ public class ExtractServiceUtil {
 
 		}
 		reader.close();
+	}
+
+	public static void setExtractAllValues(boolean extractAllValues)
+	{
+        extractAllValues = extractAllValues;
 	}
 
 	private static void createNestedExtractAttribute(String[] attrs,
@@ -127,7 +133,7 @@ public class ExtractServiceUtil {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void createExtractOutputData(
 			Map.Entry<String, InputAttribute> attribute, List<Object> data,
-			Map<String, String> responseMap, String headerPrefix) {
+			Map<String, String> responseMap, String headerPrefix, boolean extractAllValues) {
 
 		if (headerPrefix != null) {
 			headerPrefix += ".";
@@ -150,7 +156,18 @@ public class ExtractServiceUtil {
 					String value = (String) object2.get("value");
 					Boolean ov = (Boolean) object2.get("ov");
 
-					if (ov) {
+					if(extractAllValues)
+                    {
+                        if(responseMap.get(headerPrefix) != null) {
+                            responseMap.put(headerPrefix, responseMap.get(headerPrefix) + " | " + value);
+                        }
+                        else
+                        {
+                            responseMap.put(headerPrefix, value);
+                        }
+
+                    }
+					else if (ov) {
 						if (inputAttribute.count > 1) {
 							responseMap.put(headerPrefix + "_" + temp++, value);
 						} else {
@@ -158,6 +175,9 @@ public class ExtractServiceUtil {
 							break;
 						}
 					}
+					//Add logic for nonOV matching
+					//else if(nonOVGlobal ==true)
+					//responseMap.put(headerPrefix, responseMap.get(headerPrefix)+" | " value);
 				}
 			}
 		} else {
@@ -181,7 +201,7 @@ public class ExtractServiceUtil {
 								List<Object> objects3 = innerAttrs
 										.get(inputAttr.getKey());
 								createExtractOutputData(inputAttr, objects3,
-										responseMap, headerPrefix + "_" + temp);
+										responseMap, headerPrefix + "_" + temp, extractAllValues);
 							}
 						} else {
 
@@ -190,7 +210,7 @@ public class ExtractServiceUtil {
 								List<Object> objects3 = innerAttrs
 										.get(inputAttr.getKey());
 								createExtractOutputData(inputAttr, objects3,
-										responseMap, headerPrefix);
+										responseMap, headerPrefix, extractAllValues);
 							}
 
 							break;
@@ -338,7 +358,7 @@ public class ExtractServiceUtil {
 					if (temp > inputAttribute.count) {
 						break;
 					}
-					
+
 					//Checks whether the attribute is reference
 					if (inputAttribute.isReference) {
 						boolean isRefPartOfSrcCrosswalk = false;

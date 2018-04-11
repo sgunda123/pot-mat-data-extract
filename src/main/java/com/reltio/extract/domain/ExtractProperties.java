@@ -35,6 +35,7 @@ public class ExtractProperties implements Serializable {
 	private String serverHostName;
 	private String tenantId;
 	private String transitive_match;
+	private String extractAllValues;
 
 	private Integer threadCount;
 
@@ -59,6 +60,7 @@ public class ExtractProperties implements Serializable {
 		setTransitive_match(properties.getProperty("TRANSITIVE_MATCH"));
 		fileFormat = properties.getProperty("FILE_FORMAT");
 		fileDelimiter = properties.getProperty("FILE_DELIMITER");
+		extractAllValues = properties.getProperty("EXTRACT_ALL_VALUES");
 
 		if (!GenericUtilityService.checkNullOrEmpty(properties
 				.getProperty("THREAD_COUNT"))) {
@@ -290,6 +292,13 @@ public class ExtractProperties implements Serializable {
 	 */
 	public String getTenantId() {
 		return tenantId;
+	}
+
+	/**
+	 * @return the tenantId
+	 */
+	public String getExtractAllValues() {
+		return extractAllValues;
 	}
 
 	/**
