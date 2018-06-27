@@ -377,7 +377,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 
 
                 boolean extractAllValues = false;
-                if (extractProperties.getExtractAllValues().equalsIgnoreCase("true")
+                if (extractProperties.isExtractAllValues()
                         ) {
                     extractAllValues = true;
 
