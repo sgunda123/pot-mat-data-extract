@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.Properties;
 
 import com.reltio.cst.util.GenericUtilityService;
-import com.reltio.*;
 
 /**
  *
@@ -35,7 +34,7 @@ public class ExtractProperties implements Serializable {
 	private String serverHostName;
 	private String tenantId;
 	private String transitive_match;
-	private String extractAllValues;
+	private boolean extractAllValues;
 
 	private Integer threadCount;
 
@@ -60,7 +59,9 @@ public class ExtractProperties implements Serializable {
 		setTransitive_match(properties.getProperty("TRANSITIVE_MATCH"));
 		fileFormat = properties.getProperty("FILE_FORMAT");
 		fileDelimiter = properties.getProperty("FILE_DELIMITER");
-		extractAllValues = properties.getProperty("EXTRACT_ALL_VALUES");
+		if(properties.getProperty("EXTRACT_ALL_VALUES") != null && !properties.getProperty("EXTRACT_ALL_VALUES").trim().isEmpty()) {
+			setExtractAllValues(Boolean.valueOf(properties.getProperty("EXTRACT_ALL_VALUES")));
+		}
 
 		if (!GenericUtilityService.checkNullOrEmpty(properties
 				.getProperty("THREAD_COUNT"))) {
@@ -294,12 +295,7 @@ public class ExtractProperties implements Serializable {
 		return tenantId;
 	}
 
-	/**
-	 * @return the tenantId
-	 */
-	public String getExtractAllValues() {
-		return extractAllValues;
-	}
+	
 
 	/**
 	 * @param tenantId
@@ -330,6 +326,14 @@ public class ExtractProperties implements Serializable {
 
 	public void setTransitive_match(String transitive_match) {
 		this.transitive_match = transitive_match;
+	}
+
+	public boolean isExtractAllValues() {
+		return extractAllValues;
+	}
+
+	public void setExtractAllValues(boolean extractAllValues) {
+		this.extractAllValues = extractAllValues;
 	}
 
 }
