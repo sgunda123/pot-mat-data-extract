@@ -16,18 +16,20 @@ The main method of the application is at the following path:
 
 ```
 #!paintext
-AUTH_URL=https://auth.reltio.com/oauth/token
-USERNAME=mohan.kumar@reltio.com
-PASSWORD=
-TENANT_ID=9eBTsa2qL8ZgG7e
+#Common Properties
 ENVIRONMENT_URL=sndbx.reltio.com
-THREAD_COUNT=20(Recommended)
+TENANT_ID=9eBTsa2qL8ZgG7e
+AUTH_URL=https://auth.reltio.com/oauth/token
+USERNAME=*****
+PASSWORD=*****
+THREAD_COUNT=20
+
+#Tool specific properties
 ENTITY_TYPE=HCP
 OV_ATTRIBUTE_FILE=hcp-mapping.properties
 OUTPUT_FILE=pm-extracts-hcp.csv
 FILE_FORMAT=CSV
 HEADER_REQUIRED=Yes
-BATCH_SIZE=100
 
 
 ```
