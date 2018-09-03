@@ -9,7 +9,7 @@ The main method of the application is at the following path:
 ##Dependencies 
 
 1. gson-2.2.4
-2. reltio-cst-core-1.4.1
+2. reltio-cst-core-1.4.2
 3. reltio-cleanse-5.5.jar
 
 ##Parameters File Example
