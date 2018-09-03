@@ -9,7 +9,7 @@ The main method of the application is at the following path:
 ##Dependencies 
 
 1. gson-2.2.4
-2. reltio-cst-core-1.3.9
+2. reltio-cst-core-1.4.1
 3. reltio-cleanse-5.5.jar
 
 ##Parameters File Example
@@ -20,11 +20,11 @@ AUTH_URL=https://auth.reltio.com/oauth/token
 USERNAME=mohan.kumar@reltio.com
 PASSWORD=
 TENANT_ID=9eBTsa2qL8ZgG7e
-RELTIO_SERVER_HOST=sndbx.reltio.com
+ENVIRONMENT_URL=sndbx.reltio.com
 THREAD_COUNT=20(Recommended)
 ENTITY_TYPE=HCP
-OV_ATTRIBUTE_FILE_LOCATION=hcp-mapping.properties
-OUTPUT_FILE_LOCATION=pm-extracts-hcp.csv
+OV_ATTRIBUTE_FILE=hcp-mapping.properties
+OUTPUT_FILE=pm-extracts-hcp.csv
 FILE_FORMAT=CSV
 HEADER_REQUIRED=Yes
 BATCH_SIZE=100
@@ -69,6 +69,6 @@ Command to start the utility.
 ```
 #!plaintext
 
-java -jar reltio-pm-extractReport-0.0.3.jar  job_configuration.properties > $logfilepath$
+java -jar pot-mat-extract-{$version}-jar-with-dependencies.jar  job_configuration.properties > $logfilepath$
 
 ```

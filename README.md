@@ -9,9 +9,10 @@ The Potential match Extract utility helps to extract the Reltio Matched Entities
 ```
 #!plaintext
 
-Last Update Date: 02/15/2018
-Version: 1.0.0
-Description: Initial version
+Last Update Date: 03/08/2018
+Version: 1.2.1
+Description: Changes in the properties file for ROCS standarization RELTIO_SERVER_HOST renamed to ENVIRONMENT_URL , OUTPUT_FILE_LOCATION renamed to OUTPUT_FILE
+			and OV_ATTRIBUTE_FILE_LOCATION renamed to OV_ATTRIBUTE_FILE
 ```
 ##Contributing 
 Please visit our [Contributor Covenant Code of Conduct](https://bitbucket.org/reltio-ondemand/common/src/a8e997d2547bf4df9f69bf3e7f2fcefe28d7e551/CodeOfConduct.md?at=master&fileviewer=file-view-default) to learn more about our contribution guidlines
