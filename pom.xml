@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.reltio.cst</groupId>
 	<artifactId>pot-mat-extract</artifactId>
-	<version>1.2.0</version>
+	<version>1.2.1</version>
 	<name>data-extract</name>
 
 	<properties>
@@ -15,7 +15,7 @@
 		 <dependency>
             <groupId>com.reltio.cst</groupId>
             <artifactId>reltio-cst-core</artifactId>
-            <version>1.4.1</version>
+            <version>1.4.2</version>
         </dependency>
         
 	</dependencies>

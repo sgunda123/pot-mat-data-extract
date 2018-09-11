@@ -40,7 +40,7 @@ public class ExtractProperties implements Serializable {
 
 	public ExtractProperties(Properties properties) {
 		// READ the Properties values
-		serverHostName = properties.getProperty("RELTIO_SERVER_HOST");
+		serverHostName = properties.getProperty("ENVIRONMENT_URL");
 		tenantId = properties.getProperty("TENANT_ID");
 		if (!GenericUtilityService.checkNullOrEmpty(serverHostName)
 				&& !GenericUtilityService.checkNullOrEmpty(tenantId)) {
@@ -49,10 +49,10 @@ public class ExtractProperties implements Serializable {
 
 		authUrl = properties.getProperty("AUTH_URL");
 		entityType = properties.getProperty("ENTITY_TYPE");
-		ovAttrFilePath = properties.getProperty("OV_ATTRIBUTE_FILE_LOCATION");
+		ovAttrFilePath = properties.getProperty("OV_ATTRIBUTE_FILE");
 		xrefAttrFilePath = properties
 				.getProperty("XREF_ATTRIBUTE_FILE_LOCATION");
-		outputFilePath = properties.getProperty("OUTPUT_FILE_LOCATION");
+		outputFilePath = properties.getProperty("OUTPUT_FILE");
 		username = properties.getProperty("USERNAME");
 		password = properties.getProperty("PASSWORD");
 		isHeaderRequired = properties.getProperty("HEADER_REQUIRED");
