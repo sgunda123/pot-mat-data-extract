@@ -30,6 +30,7 @@ OV_ATTRIBUTE_FILE=hcp-mapping.properties
 OUTPUT_FILE=pm-extracts-hcp.csv
 FILE_FORMAT=CSV
 HEADER_REQUIRED=Yes
+TRANSITIVE_MATCH=false
 
 
 ```
