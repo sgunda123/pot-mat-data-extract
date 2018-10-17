@@ -5,22 +5,21 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.json.simple.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -29,7 +28,6 @@ import com.reltio.cst.service.TokenGeneratorService;
 import com.reltio.cst.service.impl.SimpleReltioAPIServiceImpl;
 import com.reltio.cst.service.impl.TokenGeneratorServiceImpl;
 import com.reltio.extract.domain.Attribute;
-import com.reltio.extract.domain.BigMatch;
 import com.reltio.extract.domain.Configuration;
 import com.reltio.extract.domain.EntityTypes;
 import com.reltio.extract.domain.ExtractConstants;
@@ -56,7 +54,6 @@ public class AttributeExtractReportForPotenMatchesV4 {
 
 		private static Gson GSON = new Gson();
 		private static final String[] DefaultAttributes = { "ReltioURI"};
-		private static DateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 		private static Map<Integer,String> matchUri = null;
 		private static Map<Integer,String> matchLabel = null;
 		public static void main(String[] args) throws Exception {
@@ -68,7 +65,6 @@ public class AttributeExtractReportForPotenMatchesV4 {
 			try {
 				String propertyFilePath = args[0]; 
 				FileReader in = new FileReader(propertyFilePath);
-//				InputStream in = new AttributeExtractReportForPotenMatchesV4().getClass().getResourceAsStream("/dev-ov.properties");
 				properties.load(in);
 			} catch (Exception e) {
 				System.out.println("Failed reading properties File...");
@@ -246,48 +242,35 @@ public class AttributeExtractReportForPotenMatchesV4 {
 									Map<String, String> responseMap = getXrefResponse(drivReltioObject, attributes, extractProperties );
 									
 									String[] finalResponse = objectArrayToStringArray(filterMapToObjectArray(responseMap, responseHeader));	
-								 
-									Set<Integer> keyset=matchUri.keySet();
-									for (int mu : keyset ) {
-										String quote = "\"";
-										getResponse = getResponse.replaceAll(quote + matchUri.get(mu)+quote , quote+mu+quote);
-									}
-									//Has full record here
-									BigMatch mtch = GSON.fromJson(getResponse,new TypeToken<BigMatch>(){}.getType());								
-								
-									List<Map<String,List<HObject>>> hcoObjectListMap = getMatchName(mtch);
 
-									if(hcoObjectListMap!= null && !hcoObjectListMap.isEmpty() ){
-						    			for (Map<String,List<HObject>> hcoObjsMap : hcoObjectListMap) {
-						    				for (String key : hcoObjsMap.keySet()) {
+									JSONObject object = (JSONObject)GSON.fromJson(getResponse, new TypeToken<JSONObject>() {  } .getType());
+									if(object!= null && !object.isEmpty() ){
+										Iterator<String> objItr = object.keySet().iterator();
+										
+										while (objItr.hasNext()) {
+											String ruleName = objItr.next();
+											ArrayList<HObject> objects = GSON.fromJson(GSON.toJson(((List)object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {  } .getType());
 
-						    					if (key!=null ) {
-						    						
-						    						List<HObject> hcoObjs = hcoObjsMap.get(key);
+											for(HObject obj: objects){
 
-							    					for(HObject hco: hcoObjs){
+					    						ReltioObject matchReltioObject = obj.object;
+				    						
+					    						Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes, extractProperties);
 
-							    						ReltioObject matchReltioObject=hco.object;
-						    						
-							    						Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes, extractProperties);
+												//System.out.println(getXrefResponse(matchReltioObject, attributes));
+												//Does not have all names here
+												String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));	
 
-														//System.out.println(getXrefResponse(matchReltioObject, attributes));
-														//Does not have all names here
-														String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));	
-
-														String[] matRule= new String[1];
-														matRule[0]=key;
-														
-														String[] merg =ArrayUtils.addAll(matRule, concatArray(finalResponse,finalMatchResponse));
-							    						
-														reltioFile.writeToFile(merg);
-						    						
-							    					}
-						    					}
-						    				}
-						    			}
+												String[] matRule= new String[1];
+												matRule[0]=ruleName;
+												
+												String[] merg =ArrayUtils.addAll(matRule, concatArray(finalResponse,finalMatchResponse));
+					    						
+												reltioFile.writeToFile(merg);
+				    						
+					    					}
+										}
 									}	
-									
 									
 								}								
 								
@@ -443,134 +426,6 @@ public class AttributeExtractReportForPotenMatchesV4 {
 			finalArr[j++]="match_"+tgt[i];
 		}		
 		return finalArr;
-	}
-
-	
-	public static List<Map<String,List<HObject>>> getMatchName(BigMatch mtch) {		
-
-		List<Map<String,List<HObject>>> hcoObjectListMap = new ArrayList<Map<String,List<HObject>>>();
-		if( mtch.hcoObjectList1 != null && !mtch.hcoObjectList1.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(1), mtch.hcoObjectList1);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList2 != null && !mtch.hcoObjectList2.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(2), mtch.hcoObjectList2);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList3 != null && !mtch.hcoObjectList3.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(3), mtch.hcoObjectList3);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList4 != null && !mtch.hcoObjectList4.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(4), mtch.hcoObjectList4);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList5 != null && !mtch.hcoObjectList5.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(5), mtch.hcoObjectList5);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList6 != null && !mtch.hcoObjectList6.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(6), mtch.hcoObjectList6);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList7 != null && !mtch.hcoObjectList7.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(7), mtch.hcoObjectList7);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList8 != null && !mtch.hcoObjectList8.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(8), mtch.hcoObjectList8);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList9 != null && !mtch.hcoObjectList9.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(9), mtch.hcoObjectList9);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList10 != null && !mtch.hcoObjectList10.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(10), mtch.hcoObjectList10);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList11 != null && !mtch.hcoObjectList11.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(11), mtch.hcoObjectList11);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList12 != null && !mtch.hcoObjectList12.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(12), mtch.hcoObjectList12);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList13 != null && !mtch.hcoObjectList13.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(13), mtch.hcoObjectList13);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList14 != null && !mtch.hcoObjectList14.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(14), mtch.hcoObjectList14);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList15 != null && !mtch.hcoObjectList15.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(15), mtch.hcoObjectList15);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList16 != null && !mtch.hcoObjectList16.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(16), mtch.hcoObjectList16);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList17 != null && !mtch.hcoObjectList17.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(17), mtch.hcoObjectList17);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList18 != null && !mtch.hcoObjectList18.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(18), mtch.hcoObjectList18);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList19 != null && !mtch.hcoObjectList19.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(19), mtch.hcoObjectList19);
-			hcoObjectListMap.add(hobj);
-		}
-		
-		if( mtch.hcoObjectList20 != null && !mtch.hcoObjectList20.isEmpty() ){
-			Map<String,List<HObject>> hobj = new HashMap<String,List<HObject>>();
-			hobj.put(matchLabel.get(20), mtch.hcoObjectList20);
-			hcoObjectListMap.add(hobj);
-		}
-		
-	
-		return hcoObjectListMap;
 	}
 
 }
