@@ -54,8 +54,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 
 		private static Gson GSON = new Gson();
 		private static final String[] DefaultAttributes = { "ReltioURI"};
-		private static Map<Integer,String> matchUri = null;
-		private static Map<Integer,String> matchLabel = null;
+		private static Map<String,String> matchRules = null;
 		public static void main(String[] args) throws Exception {
 			
 			System.out.println("Extract Process Started..");
@@ -101,19 +100,15 @@ public class AttributeExtractReportForPotenMatchesV4 {
 			
 			String configRes = reltioAPIService.get(extractProperties.getApiUrl()+"/configuration/_noInheritance");
 			Configuration configObj = GSON.fromJson(configRes,Configuration.class);
-			matchUri = new LinkedHashMap<Integer,String>();
-			matchLabel= new LinkedHashMap<Integer,String>();
+			matchRules = new LinkedHashMap<String,String>();
 			
 			for (EntityTypes entT : configObj.getEntityTypes()) {
 				
 				if (entT.getUri().equals("configuration/entityTypes/"+extractProperties.getEntityType())) {
 					
-					int i=0;
 					if (entT.getMatchGroups() !=null && !entT.getMatchGroups().isEmpty())
 					for (Attribute attr : entT.getMatchGroups() ) {
-						i++;
-						 matchUri.put(Integer.valueOf(i), attr.getUri().trim());
-				            matchLabel.put(Integer.valueOf(i), attr.getLabel().trim());
+						matchRules.put(attr.getUri().trim(), attr.getLabel().trim());
 					}
 				}
 			}
@@ -262,7 +257,7 @@ public class AttributeExtractReportForPotenMatchesV4 {
 												String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));	
 
 												String[] matRule= new String[1];
-												matRule[0]=ruleName;
+												matRule[0]=matchRules.get(ruleName);
 												
 												String[] merg =ArrayUtils.addAll(matRule, concatArray(finalResponse,finalMatchResponse));
 					    						
