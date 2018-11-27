@@ -19,7 +19,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
 
 import com.google.gson.Gson;
@@ -53,7 +54,7 @@ import com.reltio.file.ReltioFlatFileWriter;
  */
 public class AttributeExtractReportForPotentialMatches {
 
-	private final static Logger LOGGER = Logger.getLogger(AttributeExtractReportForPotentialMatches.class);
+    private static final Logger LOGGER = LogManager.getLogger(AttributeExtractReportForPotentialMatches.class.getName());
 
 	private static Gson GSON = new Gson();
 	private static final String[] DefaultAttributes = { "ReltioURI"};
