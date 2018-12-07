@@ -35,6 +35,7 @@ public class ExtractProperties implements Serializable {
 	private String tenantId;
 	private String transitive_match;
 	private boolean extractAllValues;
+	private int noOfRecordsPerCall = 100;
 
 	private Integer threadCount;
 
@@ -63,7 +64,7 @@ public class ExtractProperties implements Serializable {
 			setExtractAllValues(Boolean.valueOf(properties.getProperty("EXTRACT_ALL_VALUES")));
 		}
 
-		if (!GenericUtilityService.checkNullOrEmpty(properties
+		if (GenericUtilityService.checkNullOrEmpty(properties
 				.getProperty("THREAD_COUNT"))) {
 			threadCount = ExtractConstants.THREAD_COUNT;
 		} else {
@@ -334,6 +335,20 @@ public class ExtractProperties implements Serializable {
 
 	public void setExtractAllValues(boolean extractAllValues) {
 		this.extractAllValues = extractAllValues;
+	}
+
+	/**
+	 * @return the noOfRecordsPerCall
+	 */
+	public int getNoOfRecordsPerCall() {
+		return noOfRecordsPerCall;
+	}
+
+	/**
+	 * @param noOfRecordsPerCall the noOfRecordsPerCall to set
+	 */
+	public void setNoOfRecordsPerCall(int noOfRecordsPerCall) {
+		this.noOfRecordsPerCall = noOfRecordsPerCall;
 	}
 
 }

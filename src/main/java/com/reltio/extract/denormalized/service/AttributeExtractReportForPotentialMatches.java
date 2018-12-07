@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -53,8 +54,8 @@ import com.reltio.file.ReltioFlatFileWriter;
  * 
  */
 public class AttributeExtractReportForPotentialMatches {
-
-    private static final Logger LOGGER = LogManager.getLogger(AttributeExtractReportForPotentialMatches.class.getName());
+	private static final Logger LOGGER = LogManager.getLogger(AttributeExtractReportForPotentialMatches.class.getName());
+	private static final Logger logPerformance = LogManager.getLogger("performance-log");
 
 	private static Gson GSON = new Gson();
 	private static final String[] DefaultAttributes = { "ReltioURI"};
@@ -113,7 +114,7 @@ public class AttributeExtractReportForPotentialMatches {
 					/*
 					 * Creating map of matchrules uri and label
 					 */
-				
+
 					for (Attribute attr : entT.getMatchGroups() ) {
 						matchRules.put(attr.getUri().trim(), attr.getLabel().trim());
 					}
@@ -124,7 +125,8 @@ public class AttributeExtractReportForPotentialMatches {
 
 		int threadsNumber = extractProperties.getThreadCount();	
 		Integer count = 0;
-		Integer processedCount = 0;
+		long processedCount = 0l;
+        final int MAX_QUEUE_SIZE_MULTIPLICATOR = 2;
 
 		final Map<String, InputAttribute> attributes = new LinkedHashMap<>();		
 
@@ -189,7 +191,7 @@ public class AttributeExtractReportForPotentialMatches {
 		}
 		final String apiUrl =  extractProperties.getApiUrl(); 
 		String filterUrl = "filter=equals(type,'configuration/entityTypes/"+extractProperties.getEntityType() +"') and range(matches,1,3000)";
-		final String scanUrl = apiUrl + "/entities/_scan?"+filterUrl+"&select=uri&max=100";
+		final String scanUrl = apiUrl + "/entities/_scan?"+filterUrl+"&select=uri&max="+extractProperties.getNoOfRecordsPerCall();
 
 		String incReportURLTotal = apiUrl + "/entities/_total?"+filterUrl;
 		LOGGER.info("Total=="+reltioAPIService.get(incReportURLTotal));  
@@ -199,9 +201,11 @@ public class AttributeExtractReportForPotentialMatches {
 		ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadsNumber);
 		boolean eof = false;
 		ArrayList<Future<Long>> futures = new ArrayList<Future<Long>>();
+		int threadNum = 0;
 
 		while (!eof) {
-
+			for (int i = 0; i < threadsNumber * MAX_QUEUE_SIZE_MULTIPLICATOR; i++) {
+				
 			// Doing the DBScan API Call here
 			String scanResponse = reltioAPIService.post(scanUrl,intitialJSON);
 
@@ -215,16 +219,16 @@ public class AttributeExtractReportForPotentialMatches {
 
 				final List<ReltioObject> objectsToProcess = scanResponseObj.getObjects();	
 
-				int threadNum = 0;
+				threadNum++;
 
-				for (final ReltioObject objectsToProces : objectsToProcess) {	
-
-					threadNum++;
 
 					futures.add(executorService.submit(new Callable<Long>() {
 						@Override
 						public Long call() throws Exception {
+                            long startTime = System.currentTimeMillis();
 							long requestExecutionTime = 0l;
+							for (final ReltioObject objectsToProces : objectsToProcess) {	
+
 							try {
 								String getResponse ="";
 								if(matchType==null||matchType.equalsIgnoreCase("")||matchType.equalsIgnoreCase("false")){
@@ -281,27 +285,17 @@ public class AttributeExtractReportForPotentialMatches {
 
 							} catch (Exception e) {
 								e.printStackTrace();
-								LOGGER.error("Error while processing the Protential Matches", e);
+								LOGGER.error("Error while processing the Protential Matches. Object URI = "+objectsToProces.uri, e);
 							}
+						}
+                            requestExecutionTime = System.currentTimeMillis()
+                                    - startTime;
 							return requestExecutionTime;
+	
 						}
 					}));
 
 
-					if ( threadNum >= threadsNumber) {
-
-						threadNum=0;					
-						int completedCount= waitForTasksReady(futures, threadsNumber * 2, threadsNumber);			
-
-						if (completedCount >0 ) {
-							processedCount=processedCount+completedCount;						
-							//System.out.println("Processed records count = "+ processedCount + " Thread size = "+ futures.size());
-
-						}	
-
-					}
-
-				}	
 
 			} else {
 				eof = true;
@@ -311,45 +305,117 @@ public class AttributeExtractReportForPotentialMatches {
 			intitialJSON = GSON.toJson(scanResponseObj.getCursor());
 
 			intitialJSON="{\"cursor\":"+intitialJSON+"}";
+		}
+			
+//			if ( threadNum >= threadsNumber) {
+
+				//threadNum=0;					
+				processedCount += waitForTasksReady(futures, threadsNumber*(MAX_QUEUE_SIZE_MULTIPLICATOR / 2));			
+
+
+				//if(processedCount > 0) {
+					printPerformanceLog(executorService.getCompletedTaskCount()
+							* extractProperties.getNoOfRecordsPerCall(),
+							processedCount,
+							programStartTime,
+							threadsNumber);
+				//}
+
+	//		}
+
 
 
 		}
 
-		waitForTasksReady(futures, 0, threadsNumber * 3);
+		processedCount += waitForTasksReady(futures, 0);
 		executorService.shutdown();
 
 		reltioFile.close();
 
+		if(processedCount > 0) {
+			printPerformanceLog(executorService.getCompletedTaskCount()
+					* extractProperties.getNoOfRecordsPerCall(),
+					processedCount,
+					programStartTime,
+					threadsNumber);
+		}
+
 		LOGGER.info("Extract process Completed.....");
+		
+		
+	    long finalTime = System.currentTimeMillis() - programStartTime;
+	    logPerformance.info("[Performance]:  Total processing time : " + 
+	      finalTime / 1000L + "  Seconds");
+	}
+
+	public static void printPerformanceLog(long totalTasksExecuted,
+			long totalTasksExecutionTime,
+			long programStartTime, long numberOfThreads) {
+		LOGGER.info("[Performance]: ============= Current performance status ("
+				+ new Date().toString() + ") =============");
 		long finalTime = System.currentTimeMillis() - programStartTime;
 		LOGGER.info("[Performance]:  Total processing time : "
-				+ (finalTime / 1000) + "  Seconds");
+				+ finalTime);
 
+		LOGGER.info("[Performance]:  Entities sent: "
+				+ totalTasksExecuted);
+		LOGGER.info("[Performance]:  Total OPS (Entities sent / Time spent from program start): "
+				+ (totalTasksExecuted / (finalTime / 1000f)));
+		LOGGER.info("[Performance]:  Total OPS without waiting for queue (Entities sent / (Time spent from program start - Time spent in waiting for API queue)): "
+				+ (totalTasksExecuted / ((finalTime) / 1000f)));
+		LOGGER.info("[Performance]:  API Server data load requests OPS (Entities sent / (Sum of time spend by API requests / Threads count)): "
+				+ (totalTasksExecuted / ((totalTasksExecutionTime / numberOfThreads) / 1000f)));
+		LOGGER.info("[Performance]: ===============================================================================================================");
 
+		//log performance only in separate logs
+		logPerformance.info("[Performance]: ============= Current performance status ("
+				+ new Date().toString() + ") =============");
+		logPerformance.info("[Performance]:  Total processing time : "
+				+ finalTime);
 
+		logPerformance.info("[Performance]:  Entities sent: "
+				+ totalTasksExecuted);
+		logPerformance.info("[Performance]:  Total OPS (Entities sent / Time spent from program start): "
+				+ (totalTasksExecuted / (finalTime / 1000f)));
+		logPerformance.info("[Performance]:  Total OPS without waiting for queue (Entities sent / (Time spent from program start - Time spent in waiting for API queue)): "
+				+ (totalTasksExecuted / ((finalTime) / 1000f)));
+		logPerformance.info("[Performance]:  API Server data load requests OPS (Entities sent / (Sum of time spend by API requests / Threads count)): "
+				+ (totalTasksExecuted / ((totalTasksExecutionTime / numberOfThreads) / 1000f)));
+		logPerformance.info("[Performance]: ===============================================================================================================");
 	}
-	public static int waitForTasksReady(Collection<Future<Long>> futures,
-			int maxNumberInList, int threadsNumber) {
-		int totalResult = 0;
-		if (futures.size() > maxNumberInList) {			
-			for (Future<Long> future : new ArrayList<Future<Long>>(futures)) {
-				try {					
 
-					future.get();
-					totalResult +=1;
-					futures.remove(future);		
-
-					if (totalResult >= threadsNumber) {
-						break;
-					}						
-
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}			
-		}
-		return totalResult;
-	}	
+    /**
+     * Waits for futures (load tasks list put to executor) are partially ready.
+     * <code>maxNumberInList</code> parameters specifies how much tasks could be
+     * uncompleted.
+     *
+     * @param futures         - futures to wait for.
+     * @param maxNumberInList - maximum number of futures could be left in "undone" state.
+     * @return sum of executed futures execution time.
+     */
+    public static long waitForTasksReady(Collection<Future<Long>> futures,
+                                         int maxNumberInList) {
+        long totalResult = 0l;
+        while (futures.size() > maxNumberInList) {
+            try {
+                Thread.sleep(20);
+            } catch (Exception e) {
+                // ignore it...
+            }
+            for (Future<Long> future : new ArrayList<Future<Long>>(futures)) {
+                if (future.isDone()) {
+                    try {
+                        totalResult += future.get();
+                        futures.remove(future);
+                    } catch (Exception e) {
+                        LOGGER.error(e.getMessage());
+                        LOGGER.debug(e);
+                    }
+                }
+            }
+        }
+        return totalResult;
+    }
 
 
 	public static Map<String, String> getXrefResponse(ReltioObject reltioObject, Map<String, InputAttribute> attributes, ExtractProperties extractProperties) {
