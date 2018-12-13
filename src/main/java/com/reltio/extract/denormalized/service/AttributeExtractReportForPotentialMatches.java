@@ -126,7 +126,7 @@ public class AttributeExtractReportForPotentialMatches {
 		int threadsNumber = extractProperties.getThreadCount();	
 		Integer count = 0;
 		long processedCount = 0l;
-        final int MAX_QUEUE_SIZE_MULTIPLICATOR = 2;
+        final int MAX_QUEUE_SIZE_MULTIPLICATOR = 1;
 
 		final Map<String, InputAttribute> attributes = new LinkedHashMap<>();		
 
@@ -293,6 +293,7 @@ public class AttributeExtractReportForPotentialMatches {
 							return requestExecutionTime;
 	
 						}
+						
 					}));
 
 
@@ -323,13 +324,10 @@ public class AttributeExtractReportForPotentialMatches {
 
 	//		}
 
-
-
 		}
 
 		processedCount += waitForTasksReady(futures, 0);
 		executorService.shutdown();
-
 		reltioFile.close();
 
 		if(processedCount > 0) {
@@ -357,13 +355,13 @@ public class AttributeExtractReportForPotentialMatches {
 		LOGGER.info("[Performance]:  Total processing time : "
 				+ finalTime);
 
-		LOGGER.info("[Performance]:  Entities sent: "
+		LOGGER.info("[Performance]:  Match Pairs extracted for Entities: "
 				+ totalTasksExecuted);
-		LOGGER.info("[Performance]:  Total OPS (Entities sent / Time spent from program start): "
+		LOGGER.info("[Performance]:  Total OPS (Match Pairs extracted for Entities / Time spent from program start): "
 				+ (totalTasksExecuted / (finalTime / 1000f)));
-		LOGGER.info("[Performance]:  Total OPS without waiting for queue (Entities sent / (Time spent from program start - Time spent in waiting for API queue)): "
+		LOGGER.info("[Performance]:  Total OPS without waiting for queue (Match Pairs extracted for Entities / (Time spent from program start - Time spent in waiting for API queue)): "
 				+ (totalTasksExecuted / ((finalTime) / 1000f)));
-		LOGGER.info("[Performance]:  API Server data load requests OPS (Entities sent / (Sum of time spend by API requests / Threads count)): "
+		LOGGER.info("[Performance]:  API Server data load requests OPS (Match Pairs extracted for Entities / (Sum of time spend by API requests / Threads count)): "
 				+ (totalTasksExecuted / ((totalTasksExecutionTime / numberOfThreads) / 1000f)));
 		LOGGER.info("[Performance]: ===============================================================================================================");
 
@@ -375,11 +373,11 @@ public class AttributeExtractReportForPotentialMatches {
 
 		logPerformance.info("[Performance]:  Entities sent: "
 				+ totalTasksExecuted);
-		logPerformance.info("[Performance]:  Total OPS (Entities sent / Time spent from program start): "
+		logPerformance.info("[Performance]:  Total OPS (Match Pairs extracted for Entities / Time spent from program start): "
 				+ (totalTasksExecuted / (finalTime / 1000f)));
-		logPerformance.info("[Performance]:  Total OPS without waiting for queue (Entities sent / (Time spent from program start - Time spent in waiting for API queue)): "
+		logPerformance.info("[Performance]:  Total OPS without waiting for queue (Match Pairs extracted for Entities / (Time spent from program start - Time spent in waiting for API queue)): "
 				+ (totalTasksExecuted / ((finalTime) / 1000f)));
-		logPerformance.info("[Performance]:  API Server data load requests OPS (Entities sent / (Sum of time spend by API requests / Threads count)): "
+		logPerformance.info("[Performance]:  API Server data load requests OPS (Match Pairs extracted for Entities / (Sum of time spend by API requests / Threads count)): "
 				+ (totalTasksExecuted / ((totalTasksExecutionTime / numberOfThreads) / 1000f)));
 		logPerformance.info("[Performance]: ===============================================================================================================");
 	}
