@@ -9,6 +9,8 @@ import java.util.Properties;
 
 import com.reltio.cst.util.GenericUtilityService;
 
+import javax.print.DocFlavor;
+
 /**
  *
  *
@@ -35,6 +37,7 @@ public class ExtractProperties implements Serializable {
 	private String tenantId;
 	private String transitive_match;
 	private boolean extractAllValues;
+	private String targetRule;
 	private int noOfRecordsPerCall = 100;
 
 	private Integer threadCount;
@@ -63,6 +66,8 @@ public class ExtractProperties implements Serializable {
 		if(properties.getProperty("EXTRACT_ALL_VALUES") != null && !properties.getProperty("EXTRACT_ALL_VALUES").trim().isEmpty()) {
 			setExtractAllValues(Boolean.valueOf(properties.getProperty("EXTRACT_ALL_VALUES")));
 		}
+		targetRule = properties.getProperty("TARGET_RULE");
+
 
 		if (GenericUtilityService.checkNullOrEmpty(properties
 				.getProperty("THREAD_COUNT"))) {
@@ -349,6 +354,21 @@ public class ExtractProperties implements Serializable {
 	 */
 	public void setNoOfRecordsPerCall(int noOfRecordsPerCall) {
 		this.noOfRecordsPerCall = noOfRecordsPerCall;
+	}
+
+	/**
+	 * @return the targetRule
+	 */
+	public String getTargetRule() {
+		return targetRule;
+	}
+
+	/**
+	 * @param targetRule
+	 *            the targetRule to set
+	 */
+	public void setTargetRule(String targetRule) {
+		this.targetRule = targetRule;
 	}
 
 }

@@ -81,18 +81,19 @@ public class AttributeExtractReportForPotentialMatches {
 
 
 		// VERIFY the required properties
-		if (extractProperties.getApiUrl() == null
-				|| extractProperties.getEntityType() == null
-				|| extractProperties.getOutputFilePath() == null
-				|| extractProperties.getUsername() == null
-				|| extractProperties.getPassword() == null
-				|| extractProperties.getTransitive_match() == null
-				|| extractProperties.getFileFormat() == null
-				|| extractProperties.getAuthUrl() == null
-				|| extractProperties.getThreadCount() == null) {
-			LOGGER.error("Error::: one or more required parameters missing. Please verify the input properties File...." );
-			System.exit(0);
-		}
+		String missingProp = "";
+
+		propertyNullCheck(extractProperties.getApiUrl(), "API URL");
+		propertyNullCheck(extractProperties.getEntityType(), "Entity Type");
+		propertyNullCheck(extractProperties.getOutputFilePath(), "Output File Path");
+		propertyNullCheck(extractProperties.getUsername(), "Username");
+		propertyNullCheck(extractProperties.getPassword(), "Password");
+		propertyNullCheck(extractProperties.getTransitive_match(), "Transitive Match");
+		propertyNullCheck(extractProperties.getFileFormat(), "File Format");
+		propertyNullCheck(extractProperties.getAuthUrl(), "Auth URL");
+		propertyNullCheck(extractProperties.getThreadCount().toString(), "Thread count");
+
+
 
 		final String matchType=extractProperties.getTransitive_match();
 		TokenGeneratorService tokenGeneratorService = new TokenGeneratorServiceImpl(
@@ -494,6 +495,15 @@ public class AttributeExtractReportForPotentialMatches {
 			finalArr[j++]="match_"+tgt[i];
 		}		
 		return finalArr;
+	}
+
+	public static void propertyNullCheck(String property, String propertyName) {
+    	//TODO Add empty String check
+		// add extract all Properties to null checks
+		if (property == null) {
+			LOGGER.error("Error::: "+propertyName+ " parameters missing. Please verify the input properties File...." );
+			System.exit(0);
+		}
 	}
 
 }
