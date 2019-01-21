@@ -199,8 +199,17 @@ public class AttributeExtractReportForPotentialMatches {
 						"Yes")) {
 			reltioFile.writeToFile(finHeaderArray);
 		}
-		final String apiUrl =  extractProperties.getApiUrl(); 
-		String filterUrl = "filter=equals(type,'configuration/entityTypes/"+extractProperties.getEntityType() +"') and range(matches,1,3000)";
+		final String apiUrl =  extractProperties.getApiUrl();
+
+		//If target rule is specified filter search by match rules
+		String filterUrl;
+		if(targetRuleName.equals("AllRules")) {
+			 filterUrl = "filter=equals(type,'configuration/entityTypes/" + extractProperties.getEntityType() + "') and range(matches,1,3000)";
+		}
+		else{
+			 filterUrl = "filter=equals(type,'configuration/entityTypes/"+extractProperties.getEntityType() +"') and equals(matchRules,'"+targetRuleName+"')";
+
+		}
 		final String scanUrl = apiUrl + "/entities/_scan?"+filterUrl+"&select=uri&max="+extractProperties.getNoOfRecordsPerCall();
 
 		String incReportURLTotal = apiUrl + "/entities/_total?"+filterUrl;
@@ -266,9 +275,7 @@ public class AttributeExtractReportForPotentialMatches {
 
 										while (objItr.hasNext()) {
                                             String ruleName = objItr.next();
-                                            // ToDO: Replace Rule5 String with parameterized rule name
-                                            // ToDo: If parameter is null, export all rules targetRuleName
-                                            if (targetRuleName.equals("AllRules") || ruleName.equalsIgnoreCase(targetRuleName)) {
+
                                                 ArrayList<HObject> objects = GSON.fromJson(GSON.toJson(((List) object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {
                                                 }.getType());
 
@@ -290,7 +297,7 @@ public class AttributeExtractReportForPotentialMatches {
                                                     reltioFile.writeToFile(merg);
 
                                                 }
-                                            }
+
                                         }
 									}	
 
