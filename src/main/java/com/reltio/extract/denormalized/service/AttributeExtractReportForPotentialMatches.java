@@ -223,6 +223,7 @@ public class AttributeExtractReportForPotentialMatches {
 		int threadNum = 0;
 
 		while (!eof) {
+
 			for (int i = 0; i < threadsNumber * MAX_QUEUE_SIZE_MULTIPLICATOR; i++) {
 				
 			// Doing the DBScan API Call here
@@ -231,7 +232,7 @@ public class AttributeExtractReportForPotentialMatches {
 			// Convert the string the java object
 			ScanResponse scanResponseObj = GSON.fromJson(scanResponse,ScanResponse.class);
 
-			if (scanResponseObj.getObjects() != null&& scanResponseObj.getObjects().size() > 0) {						
+			if (scanResponseObj.getObjects() != null&& scanResponseObj.getObjects().size() > 0 && extractProperties.getSampeSize() > processedCount || extractProperties.getSampeSize() == 0)  {
 
 				count += scanResponseObj.getObjects().size();
 				LOGGER.info("Scaned records count = " + count);
@@ -270,38 +271,40 @@ public class AttributeExtractReportForPotentialMatches {
 									String[] finalResponse = objectArrayToStringArray(filterMapToObjectArray(responseMap, responseHeader));	
 
 									JSONObject object = (JSONObject)GSON.fromJson(getResponse, new TypeToken<JSONObject>() {  } .getType());
+
 									if(object!= null && !object.isEmpty() ){
 										Iterator<String> objItr = object.keySet().iterator();
 
 										while (objItr.hasNext()) {
                                             String ruleName = objItr.next();
+                                            //Filter other rules from report. Rule over lap would be reported otherwise
+											if (targetRuleName.equals("AllRules") || ruleName.equalsIgnoreCase(targetRuleName)) {
+												ArrayList<HObject> objects = GSON.fromJson(GSON.toJson(((List) object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {
+												}.getType());
 
-                                                ArrayList<HObject> objects = GSON.fromJson(GSON.toJson(((List) object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {
-                                                }.getType());
+												for (HObject obj : objects) {
 
-                                                for (HObject obj : objects) {
+													ReltioObject matchReltioObject = obj.object;
 
-                                                    ReltioObject matchReltioObject = obj.object;
+													Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes, extractProperties);
 
-                                                    Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes, extractProperties);
+													//System.out.println(getXrefResponse(matchReltioObject, attributes));
+													//Does not have all names here
+													String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));
 
-                                                    //System.out.println(getXrefResponse(matchReltioObject, attributes));
-                                                    //Does not have all names here
-                                                    String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));
+													String[] matRule = new String[1];
+													matRule[0] = matchRules.get(ruleName);
 
-                                                    String[] matRule = new String[1];
-                                                    matRule[0] = matchRules.get(ruleName);
+													String[] merg = ArrayUtils.addAll(matRule, concatArray(finalResponse, finalMatchResponse));
 
-                                                    String[] merg = ArrayUtils.addAll(matRule, concatArray(finalResponse, finalMatchResponse));
+													reltioFile.writeToFile(merg);
 
-                                                    reltioFile.writeToFile(merg);
-
-                                                }
-
+												}
+											}
                                         }
-									}	
+									}
 
-								}								
+								}
 
 
 
@@ -320,10 +323,12 @@ public class AttributeExtractReportForPotentialMatches {
 
 
 
-			} else {
+			}
+			else {
 				eof = true;
 				break;
 			}
+
 			scanResponseObj.setObjects(null);
 			intitialJSON = GSON.toJson(scanResponseObj.getCursor());
 
@@ -343,6 +348,7 @@ public class AttributeExtractReportForPotentialMatches {
 							programStartTime,
 							threadsNumber);
 				//}
+
 
 	//		}
 
@@ -366,6 +372,7 @@ public class AttributeExtractReportForPotentialMatches {
 	    long finalTime = System.currentTimeMillis() - programStartTime;
 	    logPerformance.info("[Performance]:  Total processing time : " + 
 	      finalTime / 1000L + "  Seconds");
+
 	}
 
 	public static void printPerformanceLog(long totalTasksExecuted,

@@ -38,6 +38,7 @@ public class ExtractProperties implements Serializable {
 	private String transitive_match;
 	private String extractAllValues;
 	private String targetRule;
+	private int sampleSize;
 	private int noOfRecordsPerCall = 100;
 
 	private Integer threadCount;
@@ -64,12 +65,12 @@ public class ExtractProperties implements Serializable {
 		fileFormat = properties.getProperty("FILE_FORMAT");
 		fileDelimiter = properties.getProperty("FILE_DELIMITER");
 		extractAllValues =  properties.getProperty("EXTRACT_ALL_VALUES");
-		/*if(properties.getProperty("EXTRACT_ALL_VALUES") != null && !properties.getProperty("EXTRACT_ALL_VALUES").trim().isEmpty()) {
-			setExtractAllValues(Boolean.valueOf(properties.getProperty("EXTRACT_ALL_VALUES")));
-		}*/
 		targetRule = properties.getProperty("TARGET_RULE");
 
-
+		if (!GenericUtilityService.checkNullOrEmpty(properties
+				.getProperty("SAMPLE_SIZE"))) {
+			sampleSize = Integer.parseInt(properties.getProperty("SAMPLE_SIZE"));
+		}
 		if (GenericUtilityService.checkNullOrEmpty(properties
 				.getProperty("THREAD_COUNT"))) {
 			threadCount = ExtractConstants.THREAD_COUNT;
@@ -371,6 +372,21 @@ public class ExtractProperties implements Serializable {
 	 */
 	public void setTargetRule(String targetRule) {
 		this.targetRule = targetRule;
+	}
+
+	/**
+	 * @return the sampleSize
+	 */
+	public Integer getSampeSize() {
+		return sampleSize;
+	}
+
+	/**
+	 * @param sampleSize
+	 *            the threadCount to set
+	 */
+	public void setSampleSize(Integer sampleSize) {
+		this.sampleSize = sampleSize;
 	}
 
 }

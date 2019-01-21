@@ -31,7 +31,8 @@ OUTPUT_FILE=pm-extracts-hcp.csv
 FILE_FORMAT=CSV
 HEADER_REQUIRED=Yes
 TRANSITIVE_MATCH=false
-
+TARGET_RULE=configuration/entityTypes/Individual/matchGroups/Rule5
+SAMPLE_SIZE=1000
 
 ```
 
@@ -42,11 +43,11 @@ TRANSITIVE_MATCH=false
 
 FirstName
 LastName
-Address.AddressLine1
-Address.AddressLine2
-Address.City
-Address.State
-Address.Zip5
+Addresses.AddressLine1
+Addresses.AddressLine2
+Addresses.City
+Addresses.State
+Addresses.Zip5
 Identifiers.Type
 Identifiers.Id
 Etc…
