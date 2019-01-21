@@ -9,6 +9,8 @@ import java.util.Properties;
 
 import com.reltio.cst.util.GenericUtilityService;
 
+import javax.print.DocFlavor;
+
 /**
  *
  *
@@ -34,7 +36,9 @@ public class ExtractProperties implements Serializable {
 	private String serverHostName;
 	private String tenantId;
 	private String transitive_match;
-	private boolean extractAllValues;
+	private String extractAllValues;
+	private String targetRule;
+	private int sampleSize;
 	private int noOfRecordsPerCall = 100;
 
 	private Integer threadCount;
@@ -60,10 +64,13 @@ public class ExtractProperties implements Serializable {
 		setTransitive_match(properties.getProperty("TRANSITIVE_MATCH"));
 		fileFormat = properties.getProperty("FILE_FORMAT");
 		fileDelimiter = properties.getProperty("FILE_DELIMITER");
-		if(properties.getProperty("EXTRACT_ALL_VALUES") != null && !properties.getProperty("EXTRACT_ALL_VALUES").trim().isEmpty()) {
-			setExtractAllValues(Boolean.valueOf(properties.getProperty("EXTRACT_ALL_VALUES")));
-		}
+		extractAllValues =  properties.getProperty("EXTRACT_ALL_VALUES");
+		targetRule = properties.getProperty("TARGET_RULE");
 
+		if (!GenericUtilityService.checkNullOrEmpty(properties
+				.getProperty("SAMPLE_SIZE"))) {
+			sampleSize = Integer.parseInt(properties.getProperty("SAMPLE_SIZE"));
+		}
 		if (GenericUtilityService.checkNullOrEmpty(properties
 				.getProperty("THREAD_COUNT"))) {
 			threadCount = ExtractConstants.THREAD_COUNT;
@@ -329,11 +336,12 @@ public class ExtractProperties implements Serializable {
 		this.transitive_match = transitive_match;
 	}
 
-	public boolean isExtractAllValues() {
+	public String getExtractAllValues() {
 		return extractAllValues;
 	}
 
-	public void setExtractAllValues(boolean extractAllValues) {
+
+	public void setExtractAllValues(String  extractAllValues) {
 		this.extractAllValues = extractAllValues;
 	}
 
@@ -349,6 +357,36 @@ public class ExtractProperties implements Serializable {
 	 */
 	public void setNoOfRecordsPerCall(int noOfRecordsPerCall) {
 		this.noOfRecordsPerCall = noOfRecordsPerCall;
+	}
+
+	/**
+	 * @return the targetRule
+	 */
+	public String getTargetRule() {
+		return targetRule;
+	}
+
+	/**
+	 * @param targetRule
+	 *            the targetRule to set
+	 */
+	public void setTargetRule(String targetRule) {
+		this.targetRule = targetRule;
+	}
+
+	/**
+	 * @return the sampleSize
+	 */
+	public Integer getSampeSize() {
+		return sampleSize;
+	}
+
+	/**
+	 * @param sampleSize
+	 *            the threadCount to set
+	 */
+	public void setSampleSize(Integer sampleSize) {
+		this.sampleSize = sampleSize;
 	}
 
 }
