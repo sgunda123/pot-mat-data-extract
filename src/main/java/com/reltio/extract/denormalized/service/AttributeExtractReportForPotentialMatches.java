@@ -88,11 +88,19 @@ public class AttributeExtractReportForPotentialMatches {
 		propertyNullCheck(extractProperties.getPassword(), "Password");
 		propertyNullCheck(extractProperties.getTransitive_match(), "Transitive Match");
 		propertyNullCheck(extractProperties.getExtractAllValues(), "Extract AlL Values");
-		//Add extract all properties
 		propertyNullCheck(extractProperties.getFileFormat(), "File Format");
 		propertyNullCheck(extractProperties.getAuthUrl(), "Auth URL");
 		propertyNullCheck(extractProperties.getThreadCount().toString(), "Thread count");
 
+
+		String targetRuleName;
+		if(extractProperties.getTargetRule() != null && !extractProperties.getTargetRule().isEmpty())
+		{
+			targetRuleName = extractProperties.getTargetRule();
+		}
+		else {
+			targetRuleName = "AllRules";
+		}
 
 
 		final String matchType=extractProperties.getTransitive_match();
@@ -259,8 +267,8 @@ public class AttributeExtractReportForPotentialMatches {
 										while (objItr.hasNext()) {
                                             String ruleName = objItr.next();
                                             // ToDO: Replace Rule5 String with parameterized rule name
-                                            // ToDo: If parameter is null, export all rules
-                                            if (ruleName.equals("configuration/entityTypes/Individual/matchGroups/Rule5")) {
+                                            // ToDo: If parameter is null, export all rules targetRuleName
+                                            if (targetRuleName.equals("AllRules") || ruleName.equalsIgnoreCase(targetRuleName)) {
                                                 ArrayList<HObject> objects = GSON.fromJson(GSON.toJson(((List) object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {
                                                 }.getType());
 
