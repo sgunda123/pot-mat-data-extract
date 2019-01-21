@@ -65,10 +65,6 @@ public class ExtractServiceUtil {
 		reader.close();
 	}
 
-	public static void setExtractAllValues(boolean extractAllValues)
-	{
-        extractAllValues = extractAllValues;
-	}
 
 	private static void createNestedExtractAttribute(String[] attrs,
 			Integer index, InputAttribute attribute, Integer noOfValues) {

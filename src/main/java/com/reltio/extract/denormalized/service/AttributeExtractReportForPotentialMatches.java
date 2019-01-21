@@ -81,14 +81,14 @@ public class AttributeExtractReportForPotentialMatches {
 
 
 		// VERIFY the required properties
-		String missingProp = "";
-
 		propertyNullCheck(extractProperties.getApiUrl(), "API URL");
 		propertyNullCheck(extractProperties.getEntityType(), "Entity Type");
 		propertyNullCheck(extractProperties.getOutputFilePath(), "Output File Path");
 		propertyNullCheck(extractProperties.getUsername(), "Username");
 		propertyNullCheck(extractProperties.getPassword(), "Password");
 		propertyNullCheck(extractProperties.getTransitive_match(), "Transitive Match");
+		propertyNullCheck(extractProperties.getExtractAllValues(), "Extract AlL Values");
+		//Add extract all properties
 		propertyNullCheck(extractProperties.getFileFormat(), "File Format");
 		propertyNullCheck(extractProperties.getAuthUrl(), "Auth URL");
 		propertyNullCheck(extractProperties.getThreadCount().toString(), "Thread count");
@@ -115,9 +115,10 @@ public class AttributeExtractReportForPotentialMatches {
 					/*
 					 * Creating map of matchrules uri and label
 					 */
-
 					for (Attribute attr : entT.getMatchGroups() ) {
-						matchRules.put(attr.getUri().trim(), attr.getLabel().trim());
+
+                            matchRules.put(attr.getUri().trim(), attr.getLabel().trim());
+
 					}
 				}
 			}
@@ -256,28 +257,33 @@ public class AttributeExtractReportForPotentialMatches {
 										Iterator<String> objItr = object.keySet().iterator();
 
 										while (objItr.hasNext()) {
-											String ruleName = objItr.next();
-											ArrayList<HObject> objects = GSON.fromJson(GSON.toJson(((List)object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {  } .getType());
+                                            String ruleName = objItr.next();
+                                            // ToDO: Replace Rule5 String with parameterized rule name
+                                            // ToDo: If parameter is null, export all rules
+                                            if (ruleName.equals("configuration/entityTypes/Individual/matchGroups/Rule5")) {
+                                                ArrayList<HObject> objects = GSON.fromJson(GSON.toJson(((List) object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {
+                                                }.getType());
 
-											for(HObject obj: objects){
+                                                for (HObject obj : objects) {
 
-												ReltioObject matchReltioObject = obj.object;
+                                                    ReltioObject matchReltioObject = obj.object;
 
-												Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes, extractProperties);
+                                                    Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes, extractProperties);
 
-												//System.out.println(getXrefResponse(matchReltioObject, attributes));
-												//Does not have all names here
-												String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));	
+                                                    //System.out.println(getXrefResponse(matchReltioObject, attributes));
+                                                    //Does not have all names here
+                                                    String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));
 
-												String[] matRule= new String[1];
-												matRule[0]=matchRules.get(ruleName);
+                                                    String[] matRule = new String[1];
+                                                    matRule[0] = matchRules.get(ruleName);
 
-												String[] merg =ArrayUtils.addAll(matRule, concatArray(finalResponse,finalMatchResponse));
+                                                    String[] merg = ArrayUtils.addAll(matRule, concatArray(finalResponse, finalMatchResponse));
 
-												reltioFile.writeToFile(merg);
+                                                    reltioFile.writeToFile(merg);
 
-											}
-										}
+                                                }
+                                            }
+                                        }
 									}	
 
 								}								
@@ -429,7 +435,7 @@ public class AttributeExtractReportForPotentialMatches {
 
 
 			boolean extractAllValues = false;
-			if (extractProperties.isExtractAllValues()
+			if (extractProperties.getExtractAllValues().equalsIgnoreCase("Yes")
 					) {
 				extractAllValues = true;
 
@@ -498,9 +504,8 @@ public class AttributeExtractReportForPotentialMatches {
 	}
 
 	public static void propertyNullCheck(String property, String propertyName) {
-    	//TODO Add empty String check
-		// add extract all Properties to null checks
-		if (property == null) {
+
+		if (property == null || property == "") {
 			LOGGER.error("Error::: "+propertyName+ " parameters missing. Please verify the input properties File...." );
 			System.exit(0);
 		}

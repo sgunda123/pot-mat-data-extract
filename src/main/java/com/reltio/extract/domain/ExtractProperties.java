@@ -36,7 +36,7 @@ public class ExtractProperties implements Serializable {
 	private String serverHostName;
 	private String tenantId;
 	private String transitive_match;
-	private boolean extractAllValues;
+	private String extractAllValues;
 	private String targetRule;
 	private int noOfRecordsPerCall = 100;
 
@@ -63,9 +63,10 @@ public class ExtractProperties implements Serializable {
 		setTransitive_match(properties.getProperty("TRANSITIVE_MATCH"));
 		fileFormat = properties.getProperty("FILE_FORMAT");
 		fileDelimiter = properties.getProperty("FILE_DELIMITER");
-		if(properties.getProperty("EXTRACT_ALL_VALUES") != null && !properties.getProperty("EXTRACT_ALL_VALUES").trim().isEmpty()) {
+		extractAllValues =  properties.getProperty("EXTRACT_ALL_VALUES");
+		/*if(properties.getProperty("EXTRACT_ALL_VALUES") != null && !properties.getProperty("EXTRACT_ALL_VALUES").trim().isEmpty()) {
 			setExtractAllValues(Boolean.valueOf(properties.getProperty("EXTRACT_ALL_VALUES")));
-		}
+		}*/
 		targetRule = properties.getProperty("TARGET_RULE");
 
 
@@ -334,11 +335,12 @@ public class ExtractProperties implements Serializable {
 		this.transitive_match = transitive_match;
 	}
 
-	public boolean isExtractAllValues() {
+	public String getExtractAllValues() {
 		return extractAllValues;
 	}
 
-	public void setExtractAllValues(boolean extractAllValues) {
+
+	public void setExtractAllValues(String  extractAllValues) {
 		this.extractAllValues = extractAllValues;
 	}
 
