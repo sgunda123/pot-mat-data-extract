@@ -22,17 +22,16 @@ import com.reltio.extract.domain.XrefInputAttribute;
 public class ExtractServiceUtil {
 
 
-	public static void createAttributeMapFromProperties(BufferedReader reader,
+	public static String createAttributeMapFromProperties(BufferedReader reader,
 			Map<String, InputAttribute> attributes) throws IOException {
 
 		boolean eof = false;
-
+		StringBuilder selectFldBuilder = new StringBuilder();
 		// Read OV attributes File
 		while (!eof) {
 
 			String line = reader.readLine();
 			Integer noOfValues = 1;
-
 			if (line == null) {
 				break;
 			} else if (line.contains("=")) {
@@ -60,9 +59,14 @@ public class ExtractServiceUtil {
 
 				attributes.put(line, inputAttribute);
 			}
+			selectFldBuilder.append("attributes."+line+",");
 
 		}
 		reader.close();
+		
+		selectFldBuilder.replace(selectFldBuilder.length()-1, selectFldBuilder.length(), "");
+		
+		return selectFldBuilder.toString();
 	}
 
 

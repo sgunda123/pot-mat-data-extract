@@ -3,18 +3,16 @@ package com.reltio.extract.denormalized.service;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -22,27 +20,22 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.simple.JSONObject;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.reltio.cst.service.ReltioAPIService;
 import com.reltio.cst.service.TokenGeneratorService;
 import com.reltio.cst.service.impl.SimpleReltioAPIServiceImpl;
 import com.reltio.cst.service.impl.TokenGeneratorServiceImpl;
+import com.reltio.cst.util.Util;
 import com.reltio.extract.domain.Attribute;
 import com.reltio.extract.domain.Configuration;
 import com.reltio.extract.domain.EntityTypes;
-import com.reltio.extract.domain.ExtractConstants;
 import com.reltio.extract.domain.ExtractProperties;
-import com.reltio.extract.domain.HObject;
 import com.reltio.extract.domain.InputAttribute;
 import com.reltio.extract.domain.ReltioObject;
 import com.reltio.extract.domain.ScanResponse;
 import com.reltio.extract.util.ExtractServiceUtil;
-import com.reltio.file.ReltioCSVFileWriter;
 import com.reltio.file.ReltioFileWriter;
-import com.reltio.file.ReltioFlatFileWriter;
 
 
 
@@ -64,33 +57,21 @@ public class AttributeExtractReportForPotentialMatches {
 
 		LOGGER.info("Extract Process Started..");
 		long programStartTime = System.currentTimeMillis();
-		Properties properties = new Properties();
+		Properties config = Util.getProperties(args[0], "PASSWORD");
 
-		try {
-			String propertyFilePath = args[0]; 
-			FileReader in = new FileReader(propertyFilePath);
-			properties.load(in);
-		} catch (Exception e) {
-			LOGGER.error("Failed reading properties File...");
-			e.printStackTrace();
+		List<String> missingKeys = Util.listMissingProperties(config,
+				Arrays.asList("ENTITY_TYPE","ENVIRONMENT_URL","USERNAME", "AUTH_URL", "PASSWORD", "FILE_FORMAT", "ENVIRONMENT_URL", "TENANT_ID", "OUTPUT_FILE","TRANSITIVE_MATCH"));
+
+
+		if (!missingKeys.isEmpty()) {
+			System.out.println(
+					"Following properties are missing from configuration file!! \n" + String.join("\n", missingKeys));
+			System.exit(0);
 		}
 
 		// READ the Properties values
 		final ExtractProperties extractProperties = new ExtractProperties(
-				properties);
-
-
-		// VERIFY the required properties
-		propertyNullCheck(extractProperties.getApiUrl(), "API URL");
-		propertyNullCheck(extractProperties.getEntityType(), "Entity Type");
-		propertyNullCheck(extractProperties.getOutputFilePath(), "Output File Path");
-		propertyNullCheck(extractProperties.getUsername(), "Username");
-		propertyNullCheck(extractProperties.getPassword(), "Password");
-		propertyNullCheck(extractProperties.getTransitive_match(), "Transitive Match");
-		propertyNullCheck(extractProperties.getExtractAllValues(), "Extract AlL Values");
-		propertyNullCheck(extractProperties.getFileFormat(), "File Format");
-		propertyNullCheck(extractProperties.getAuthUrl(), "Auth URL");
-		propertyNullCheck(extractProperties.getThreadCount().toString(), "Thread count");
+				config);
 
 
 		String targetRuleName;
@@ -103,7 +84,6 @@ public class AttributeExtractReportForPotentialMatches {
 		}
 
 
-		final String matchType=extractProperties.getTransitive_match();
 		TokenGeneratorService tokenGeneratorService = new TokenGeneratorServiceImpl(
 				extractProperties.getUsername(),
 				extractProperties.getPassword(), extractProperties.getAuthUrl());
@@ -125,7 +105,7 @@ public class AttributeExtractReportForPotentialMatches {
 					 */
 					for (Attribute attr : entT.getMatchGroups() ) {
 
-                            matchRules.put(attr.getUri().trim(), attr.getLabel().trim());
+						matchRules.put(attr.getUri().trim(), attr.getLabel().trim());
 
 					}
 				}
@@ -136,10 +116,11 @@ public class AttributeExtractReportForPotentialMatches {
 		int threadsNumber = extractProperties.getThreadCount();	
 		Integer count = 0;
 		long processedCount = 0l;
-        final int MAX_QUEUE_SIZE_MULTIPLICATOR = 1;
+		final int MAX_QUEUE_SIZE_MULTIPLICATOR = 1;
 
 		final Map<String, InputAttribute> attributes = new LinkedHashMap<>();		
 
+		String selectAttributes = null;
 		// Read OV Values Attribute
 		if (extractProperties.getOvAttrFilePath() != null
 				&& !extractProperties.getOvAttrFilePath().isEmpty()
@@ -147,7 +128,7 @@ public class AttributeExtractReportForPotentialMatches {
 						"null")) {
 
 			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(extractProperties.getOvAttrFilePath()), "UTF-8"));
-			ExtractServiceUtil.createAttributeMapFromProperties(reader,
+			selectAttributes = ExtractServiceUtil.createAttributeMapFromProperties(reader,
 					attributes);
 
 
@@ -165,51 +146,19 @@ public class AttributeExtractReportForPotentialMatches {
 			ExtractServiceUtil.createExtractNestedResponseHeader(attr,fileResponseHeader, null);
 		}
 
-		final ReltioFileWriter reltioFile;
-
-		// Output File
-		// check whether its CSV out FILE or Flat File
-		if (extractProperties.getFileFormat().equalsIgnoreCase("CSV")) {
-			reltioFile = new ReltioCSVFileWriter(
-					extractProperties.getOutputFilePath());
-		} else if (extractProperties.getFileDelimiter() != null) {
-			// provided file Delimiter
-			reltioFile = new ReltioFlatFileWriter(
-					extractProperties.getOutputFilePath(),
-					ExtractConstants.ENCODING,
-					extractProperties.getFileDelimiter());
-		} else {
-
-			// Default delimiter pipe
-			reltioFile = new ReltioFlatFileWriter(
-					extractProperties.getOutputFilePath());
-		}
-
 		final String[] responseHeader = new String[fileResponseHeader.size()];
 		fileResponseHeader.toArray(responseHeader);
 
+		final HashMap<String,ReltioFileWriter> reltioFilesMap = new HashMap<>();
 
 		String[] matRuleHead= new String[1];
 		matRuleHead[0]="Rule";			
 		String[] finHeaderArray =(String[])ArrayUtils.addAll(matRuleHead, concatHeaderArray (responseHeader,responseHeader));
 
-
-		if (extractProperties.getIsHeaderRequired() == null
-				|| extractProperties.getIsHeaderRequired().equalsIgnoreCase(
-						"Yes")) {
-			reltioFile.writeToFile(finHeaderArray);
-		}
 		final String apiUrl =  extractProperties.getApiUrl();
 
 		//If target rule is specified filter search by match rules
-		String filterUrl;
-		if(targetRuleName.equals("AllRules")) {
-			 filterUrl = "filter=equals(type,'configuration/entityTypes/" + extractProperties.getEntityType() + "') and range(matches,1,3000)";
-		}
-		else{
-			 filterUrl = "filter=equals(type,'configuration/entityTypes/"+extractProperties.getEntityType() +"') and equals(matchRules,'"+targetRuleName+"')";
-
-		}
+		String filterUrl = consructFilterUrl(extractProperties, targetRuleName);
 		final String scanUrl = apiUrl + "/entities/_scan?"+filterUrl+"&select=uri&max="+extractProperties.getNoOfRecordsPerCall();
 
 		String incReportURLTotal = apiUrl + "/entities/_total?"+filterUrl;
@@ -220,144 +169,58 @@ public class AttributeExtractReportForPotentialMatches {
 		ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadsNumber);
 		boolean eof = false;
 		ArrayList<Future<Long>> futures = new ArrayList<Future<Long>>();
-		int threadNum = 0;
 
 		while (!eof) {
 
 			for (int i = 0; i < threadsNumber * MAX_QUEUE_SIZE_MULTIPLICATOR; i++) {
-				
-			// Doing the DBScan API Call here
-			String scanResponse = reltioAPIService.post(scanUrl,intitialJSON);
 
-			// Convert the string the java object
-			ScanResponse scanResponseObj = GSON.fromJson(scanResponse,ScanResponse.class);
+				// Doing the DBScan API Call here
+				String scanResponse = reltioAPIService.post(scanUrl,intitialJSON);
 
-			if (scanResponseObj.getObjects() != null&& scanResponseObj.getObjects().size() > 0 && extractProperties.getSampeSize() > processedCount || extractProperties.getSampeSize() == 0)  {
+				// Convert the string the java object
+				ScanResponse scanResponseObj = GSON.fromJson(scanResponse,ScanResponse.class);
 
-				count += scanResponseObj.getObjects().size();
-				LOGGER.info("Scaned records count = " + count);
+				if (scanResponseObj.getObjects() != null && scanResponseObj.getObjects().size() > 0 && extractProperties.getSampleSize() > count || extractProperties.getSampleSize() == 0)  {
 
-				final List<ReltioObject> objectsToProcess = scanResponseObj.getObjects();	
+					count += scanResponseObj.getObjects().size();
+					LOGGER.info("Scaned records count = " + count);
 
-				threadNum++;
+					final List<ReltioObject> objectsToProcess = scanResponseObj.getObjects();	
 
-
-					futures.add(executorService.submit(new Callable<Long>() {
-						@Override
-						public Long call() throws Exception {
-                            long startTime = System.currentTimeMillis();
-							long requestExecutionTime = 0l;
-							for (final ReltioObject objectsToProces : objectsToProcess) {	
-
-							try {
-								String getResponse ="";
-								if(matchType==null||matchType.equalsIgnoreCase("")||matchType.equalsIgnoreCase("false")){
-									getResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri +"/_matches?deep=1");								
-
-								}else{
-									getResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri +"/_matches");								
-								}
-								//								System.out.println(getResponse);
-
-								if (getResponse !=null && getResponse.contains("uri")) {
-
-									String drivGetResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri);
-									// Convert the string the java object
-									ReltioObject drivReltioObject = GSON.fromJson(drivGetResponse,ReltioObject.class);
-
-									//System.out.println(getResponse);
-									Map<String, String> responseMap = getXrefResponse(drivReltioObject, attributes, extractProperties );
-
-									String[] finalResponse = objectArrayToStringArray(filterMapToObjectArray(responseMap, responseHeader));	
-
-									JSONObject object = (JSONObject)GSON.fromJson(getResponse, new TypeToken<JSONObject>() {  } .getType());
-
-									if(object!= null && !object.isEmpty() ){
-										Iterator<String> objItr = object.keySet().iterator();
-
-										while (objItr.hasNext()) {
-                                            String ruleName = objItr.next();
-                                            //Filter other rules from report. Rule over lap would be reported otherwise
-											if (targetRuleName.equals("AllRules") || ruleName.equalsIgnoreCase(targetRuleName)) {
-												ArrayList<HObject> objects = GSON.fromJson(GSON.toJson(((List) object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {
-												}.getType());
-
-												for (HObject obj : objects) {
-
-													ReltioObject matchReltioObject = obj.object;
-
-													Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes, extractProperties);
-
-													//System.out.println(getXrefResponse(matchReltioObject, attributes));
-													//Does not have all names here
-													String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));
-
-													String[] matRule = new String[1];
-													matRule[0] = matchRules.get(ruleName);
-
-													String[] merg = ArrayUtils.addAll(matRule, concatArray(finalResponse, finalMatchResponse));
-
-													reltioFile.writeToFile(merg);
-
-												}
-											}
-                                        }
-									}
-
-								}
+					PMExtractTask ec = new PMExtractTask(objectsToProcess, reltioAPIService, extractProperties, apiUrl, attributes, responseHeader, matchRules, reltioFilesMap, finHeaderArray, selectAttributes, targetRuleName);
+					Future<Long> f = executorService.submit(ec);
+					futures.add(f);
 
 
+				}
+				else {
+					eof = true;
+					break;
+				}
 
-							} catch (Exception e) {
-								e.printStackTrace();
-								LOGGER.error("Error while processing the Protential Matches. Object URI = "+objectsToProces.uri, e);
-							}
-						}
-                            requestExecutionTime = System.currentTimeMillis()
-                                    - startTime;
-							return requestExecutionTime;
-	
-						}
-						
-					}));
+				scanResponseObj.setObjects(null);
+				intitialJSON = GSON.toJson(scanResponseObj.getCursor());
 
-
-
-			}
-			else {
-				eof = true;
-				break;
+				intitialJSON="{\"cursor\":"+intitialJSON+"}";
 			}
 
-			scanResponseObj.setObjects(null);
-			intitialJSON = GSON.toJson(scanResponseObj.getCursor());
-
-			intitialJSON="{\"cursor\":"+intitialJSON+"}";
-		}
-			
-//			if ( threadNum >= threadsNumber) {
-
-				//threadNum=0;					
-				processedCount += waitForTasksReady(futures, threadsNumber*(MAX_QUEUE_SIZE_MULTIPLICATOR / 2));			
+			processedCount += waitForTasksReady(futures, threadsNumber*(MAX_QUEUE_SIZE_MULTIPLICATOR / 2));			
 
 
-				//if(processedCount > 0) {
-					printPerformanceLog(executorService.getCompletedTaskCount()
-							* extractProperties.getNoOfRecordsPerCall(),
-							processedCount,
-							programStartTime,
-							threadsNumber);
-				//}
-
-
-	//		}
+			printPerformanceLog(executorService.getCompletedTaskCount()
+					* extractProperties.getNoOfRecordsPerCall(),
+					processedCount,
+					programStartTime,
+					threadsNumber);
 
 		}
 
 		processedCount += waitForTasksReady(futures, 0);
 		executorService.shutdown();
-		reltioFile.close();
-
+		
+		for(Map.Entry<String, ReltioFileWriter> entry : reltioFilesMap.entrySet()) {
+			entry.getValue().close();
+		}
 		if(processedCount > 0) {
 			printPerformanceLog(executorService.getCompletedTaskCount()
 					* extractProperties.getNoOfRecordsPerCall(),
@@ -367,11 +230,11 @@ public class AttributeExtractReportForPotentialMatches {
 		}
 
 		LOGGER.info("Extract process Completed.....");
-		
-		
-	    long finalTime = System.currentTimeMillis() - programStartTime;
-	    logPerformance.info("[Performance]:  Total processing time : " + 
-	      finalTime / 1000L + "  Seconds");
+
+
+		long finalTime = System.currentTimeMillis() - programStartTime;
+		logPerformance.info("[Performance]:  Total processing time : " + 
+				finalTime / 1000L + "  Seconds");
 
 	}
 
@@ -411,109 +274,39 @@ public class AttributeExtractReportForPotentialMatches {
 		logPerformance.info("[Performance]: ===============================================================================================================");
 	}
 
-    /**
-     * Waits for futures (load tasks list put to executor) are partially ready.
-     * <code>maxNumberInList</code> parameters specifies how much tasks could be
-     * uncompleted.
-     *
-     * @param futures         - futures to wait for.
-     * @param maxNumberInList - maximum number of futures could be left in "undone" state.
-     * @return sum of executed futures execution time.
-     */
-    public static long waitForTasksReady(Collection<Future<Long>> futures,
-                                         int maxNumberInList) {
-        long totalResult = 0l;
-        while (futures.size() > maxNumberInList) {
-            try {
-                Thread.sleep(20);
-            } catch (Exception e) {
-                // ignore it...
-            }
-            for (Future<Long> future : new ArrayList<Future<Long>>(futures)) {
-                if (future.isDone()) {
-                    try {
-                        totalResult += future.get();
-                        futures.remove(future);
-                    } catch (Exception e) {
-                        LOGGER.error(e.getMessage());
-                        LOGGER.debug(e);
-                    }
-                }
-            }
-        }
-        return totalResult;
-    }
-
-
-	public static Map<String, String> getXrefResponse(ReltioObject reltioObject, Map<String, InputAttribute> attributes, ExtractProperties extractProperties) {
-
-		Map<String, String> responseMap = new HashMap<String, String>();
-		responseMap.put("ReltioURI", reltioObject.uri);
-
-
-
-		for (Map.Entry<String, InputAttribute> attr : attributes.entrySet()) {
-			List<Object> attributeData = reltioObject.attributes.get(attr.getKey());
-
-
-			boolean extractAllValues = false;
-			if (extractProperties.getExtractAllValues().equalsIgnoreCase("Yes")
-					) {
-				extractAllValues = true;
-
+	/**
+	 * Waits for futures (load tasks list put to executor) are partially ready.
+	 * <code>maxNumberInList</code> parameters specifies how much tasks could be
+	 * uncompleted.
+	 *
+	 * @param futures         - futures to wait for.
+	 * @param maxNumberInList - maximum number of futures could be left in "undone" state.
+	 * @return sum of executed futures execution time.
+	 */
+	public static long waitForTasksReady(Collection<Future<Long>> futures,
+			int maxNumberInList) {
+		long totalResult = 0l;
+		while (futures.size() > maxNumberInList) {
+			try {
+				Thread.sleep(20);
+			} catch (Exception e) {
+				// ignore it...
 			}
-			ExtractServiceUtil.createExtractOutputData(attr, attributeData, responseMap, null, extractAllValues);
-		}	
-
-		return responseMap;
-	}
-
-
-	public static Object[] filterMapToObjectArray(final Map<String, ?> values,
-			final String[] nameMapping) {
-
-		if (values == null) {
-			throw new NullPointerException("values should not be null");
-		} else if (nameMapping == null) {
-			throw new NullPointerException("nameMapping should not be null");
+			for (Future<Long> future : new ArrayList<Future<Long>>(futures)) {
+				if (future.isDone()) {
+					try {
+						totalResult += future.get();
+						futures.remove(future);
+					} catch (Exception e) {
+						LOGGER.error(e.getMessage());
+						LOGGER.debug(e);
+					}
+				}
+			}
 		}
-
-		final Object[] targetArray = new Object[nameMapping.length];
-		int i = 0;
-		for (final String name : nameMapping) {
-			targetArray[i++] = values.get(name);
-		}
-		return targetArray;
+		return totalResult;
 	}
-
-
-	public static String[] objectArrayToStringArray(final Object[] objectArray) {
-		if (objectArray == null) {
-			return null;
-		}
-
-		final String[] stringArray = new String[objectArray.length];
-		for (int i = 0; i < objectArray.length; i++) {
-			stringArray[i] = objectArray[i] != null ? objectArray[i].toString()
-					: null;
-		}
-
-		return stringArray;
-	}
-
-
-
-	public static String[] concatArray(String[] src, String[] tgt) {
-		String[] finalArr = new String[src.length+tgt.length];
-
-		int j=0;
-		for (int i=0;i<src.length;i++) {
-			finalArr[j++]=src[i];
-			finalArr[j++]=tgt[i];
-		}		
-		return finalArr;
-	}
-
+	
 	public static String[] concatHeaderArray(String[] src, String[] tgt) {
 		String[] finalArr = new String[src.length+tgt.length];
 
@@ -525,12 +318,25 @@ public class AttributeExtractReportForPotentialMatches {
 		return finalArr;
 	}
 
-	public static void propertyNullCheck(String property, String propertyName) {
+	private static String consructFilterUrl(ExtractProperties extractProperties, String targetRuleName) {
+		StringBuilder urlBuilder = new StringBuilder();
 
-		if (property == null || property == "") {
-			LOGGER.error("Error::: "+propertyName+ " parameters missing. Please verify the input properties File...." );
-			System.exit(0);
+		urlBuilder.append("filter=equals(type,'configuration/entityTypes/");
+		urlBuilder.append(extractProperties.getEntityType());
+		urlBuilder.append("') and range(matches,");
+		urlBuilder.append(extractProperties.getMin()+","+extractProperties.getMax()+")");
+
+		if(!targetRuleName.equals("AllRules")) {
+			urlBuilder.append("and equals(matchRules,'"+targetRuleName+"')");
 		}
+
+		
+		if(extractProperties.getFilterCondition() != null && !extractProperties.getFilterCondition().isEmpty()) {
+			urlBuilder.append(" and "+extractProperties.getFilterCondition());
+
+		}
+
+		return urlBuilder.toString();
 	}
 
 }

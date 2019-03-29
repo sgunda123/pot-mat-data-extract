@@ -9,8 +9,6 @@ import java.util.Properties;
 
 import com.reltio.cst.util.GenericUtilityService;
 
-import javax.print.DocFlavor;
-
 /**
  *
  *
@@ -36,8 +34,16 @@ public class ExtractProperties implements Serializable {
 	private String serverHostName;
 	private String tenantId;
 	private String transitive_match;
-	private String extractAllValues;
+	private boolean extractAllValues;
 	private String targetRule;
+	private boolean extractPerRule;
+	private String filterCondition;
+
+	private int min = 1;
+	private int max = 100000;
+
+	private int limit = 200;
+	
 	private int sampleSize;
 	private int noOfRecordsPerCall = 100;
 
@@ -64,7 +70,11 @@ public class ExtractProperties implements Serializable {
 		setTransitive_match(properties.getProperty("TRANSITIVE_MATCH"));
 		fileFormat = properties.getProperty("FILE_FORMAT");
 		fileDelimiter = properties.getProperty("FILE_DELIMITER");
-		extractAllValues =  properties.getProperty("EXTRACT_ALL_VALUES");
+		
+		if(properties.getProperty("EXTRACT_ALL_VALUES") != null && !properties.getProperty("EXTRACT_ALL_VALUES").trim().isEmpty()) {
+			setExtractAllValues(Boolean.valueOf(properties.getProperty("EXTRACT_ALL_VALUES")));
+		}
+
 		targetRule = properties.getProperty("TARGET_RULE");
 
 		if (!GenericUtilityService.checkNullOrEmpty(properties
@@ -78,6 +88,21 @@ public class ExtractProperties implements Serializable {
 			threadCount = Integer.parseInt(properties
 					.getProperty("THREAD_COUNT"));
 		}
+		
+		
+		if (!GenericUtilityService.checkNullOrEmpty(properties
+				.getProperty("BATCH_SIZE"))) {
+			noOfRecordsPerCall = Integer.parseInt(properties
+					.getProperty("BATCH_SIZE"));
+		}
+
+
+		if(properties.getProperty("EXTRACT_PER_RULE") != null && !properties.getProperty("EXTRACT_PER_RULE").trim().isEmpty()) {
+			setExtractPerRule(Boolean.valueOf(properties.getProperty("EXTRACT_PER_RULE")));
+		}
+		
+		filterCondition = properties.getProperty("FILTER_CONDITION");
+
 	}
 
 	public ExtractProperties(String serverHostName, String tenantId,
@@ -114,6 +139,83 @@ public class ExtractProperties implements Serializable {
 			this.outputFilePath += ".txt";
 		}
 
+	}
+
+	/**
+	 * @return the extractPerRule
+	 */
+	public boolean isExtractPerRule() {
+		return extractPerRule;
+	}
+
+	/**
+	 * @param extractPerRule the extractPerRule to set
+	 */
+	public void setExtractPerRule(boolean extractPerRule) {
+		this.extractPerRule = extractPerRule;
+	}
+
+	/**
+	 * @return the filterCondition
+	 */
+	public String getFilterCondition() {
+		return filterCondition;
+	}
+
+	/**
+	 * @param filterCondition the filterCondition to set
+	 */
+	public void setFilterCondition(String filterCondition) {
+		this.filterCondition = filterCondition;
+	}
+
+	/**
+	 * @return the min
+	 */
+	public int getMin() {
+		return min;
+	}
+
+	/**
+	 * @param min the min to set
+	 */
+	public void setMin(int min) {
+		this.min = min;
+	}
+
+	/**
+	 * @return the max
+	 */
+	public int getMax() {
+		return max;
+	}
+
+	/**
+	 * @param max the max to set
+	 */
+	public void setMax(int max) {
+		this.max = max;
+	}
+
+	/**
+	 * @return the limit
+	 */
+	public int getLimit() {
+		return limit;
+	}
+
+	/**
+	 * @param limit the limit to set
+	 */
+	public void setLimit(int limit) {
+		this.limit = limit;
+	}
+
+	/**
+	 * @param sampleSize the sampleSize to set
+	 */
+	public void setSampleSize(int sampleSize) {
+		this.sampleSize = sampleSize;
 	}
 
 	/**
@@ -336,15 +438,6 @@ public class ExtractProperties implements Serializable {
 		this.transitive_match = transitive_match;
 	}
 
-	public String getExtractAllValues() {
-		return extractAllValues;
-	}
-
-
-	public void setExtractAllValues(String  extractAllValues) {
-		this.extractAllValues = extractAllValues;
-	}
-
 	/**
 	 * @return the noOfRecordsPerCall
 	 */
@@ -377,7 +470,7 @@ public class ExtractProperties implements Serializable {
 	/**
 	 * @return the sampleSize
 	 */
-	public Integer getSampeSize() {
+	public Integer getSampleSize() {
 		return sampleSize;
 	}
 
@@ -387,6 +480,20 @@ public class ExtractProperties implements Serializable {
 	 */
 	public void setSampleSize(Integer sampleSize) {
 		this.sampleSize = sampleSize;
+	}
+
+	/**
+	 * @return the extractAllValues
+	 */
+	public boolean isExtractAllValues() {
+		return extractAllValues;
+	}
+
+	/**
+	 * @param extractAllValues the extractAllValues to set
+	 */
+	public void setExtractAllValues(boolean extractAllValues) {
+		this.extractAllValues = extractAllValues;
 	}
 
 }

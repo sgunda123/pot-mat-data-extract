@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.reltio.cst</groupId>
 	<artifactId>pot-mat-extract</artifactId>
-	<version>1.2.3</version>
+	<version>1.2.5</version>
 	<name>pot-mat-extract</name>
 
 	<properties>
@@ -16,7 +16,7 @@
 		<dependency>
 			<groupId>com.reltio.cst</groupId>
 			<artifactId>reltio-cst-core</artifactId>
-			<version>1.4.3</version>
+			<version>1.4.6</version>
 			<exclusions>
 				<exclusion>  <!-- declare the exclusion here -->
 					<groupId>org.apache.tika</groupId>

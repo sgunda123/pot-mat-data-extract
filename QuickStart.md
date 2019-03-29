@@ -9,8 +9,7 @@ The main method of the application is at the following path:
 ##Dependencies 
 
 1. gson-2.2.4
-2. reltio-cst-core-1.4.3
-3. reltio-cleanse-5.5.jar
+2. reltio-cst-core-1.4.6
 
 ##Parameters File Example
 
@@ -31,6 +30,9 @@ OUTPUT_FILE=pm-extracts-hcp.csv
 FILE_FORMAT=CSV
 HEADER_REQUIRED=Yes
 TRANSITIVE_MATCH=false
+BATCH_SIZE=100
+EXTRACT_PER_RULE=false
+FILTER_CONDITION=contains(attributes.LegacyData.ID,'*00')
 TARGET_RULE=configuration/entityTypes/Individual/matchGroups/Rule5
 SAMPLE_SIZE=1000
 
