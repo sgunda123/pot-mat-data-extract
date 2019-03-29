@@ -62,7 +62,6 @@ public class ExtractServiceUtil {
 			selectFldBuilder.append("attributes."+line+",");
 
 		}
-		reader.close();
 		
 		selectFldBuilder.replace(selectFldBuilder.length()-1, selectFldBuilder.length(), "");
 		

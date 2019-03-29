@@ -132,7 +132,7 @@ public class AttributeExtractReportForPotentialMatches {
 			selectAttributes = ExtractServiceUtil.createAttributeMapFromProperties(reader,
 					attributes);
 
-
+			Util.close(reader);
 
 		}
 
