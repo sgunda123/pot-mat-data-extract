@@ -114,7 +114,7 @@ public class PMExtractTask implements Callable<Long>{
 
 						while (objItr.hasNext()) {
 							String ruleName = objItr.next();
-							ArrayList<HObject> objects = GSON.fromJson(GSON.toJson(((List)object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {  } .getType());
+							List<HObject> objects = GSON.fromJson(GSON.toJson(((List)object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {  } .getType());
 							if (targetRuleName.equals("AllRules") || ruleName.equalsIgnoreCase(targetRuleName)) {
 								for(HObject obj: objects){
 
@@ -126,8 +126,7 @@ public class PMExtractTask implements Callable<Long>{
 									//Does not have all names here
 									String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));	
 
-									String[] matRule= new String[1];
-									matRule[0]=matchRules.get(ruleName);
+									String[] matRule= {matchRules.get(ruleName)};
 
 									String[] merg =ArrayUtils.addAll(matRule, concatArray(finalResponse,finalMatchResponse));
 
@@ -161,7 +160,8 @@ public class PMExtractTask implements Callable<Long>{
 	 */
 	private String getSelectFields() {
 		StringBuilder selectAttrsBuilder = new StringBuilder();
-		selectAttrsBuilder.append("uri,"+selectAttributes);
+		selectAttrsBuilder.append("uri,");
+		selectAttrsBuilder.append(selectAttributes);
 		return selectAttrsBuilder.toString();
 	}
 

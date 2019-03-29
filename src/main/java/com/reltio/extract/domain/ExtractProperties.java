@@ -91,9 +91,9 @@ public class ExtractProperties implements Serializable {
 		
 		
 		if (!GenericUtilityService.checkNullOrEmpty(properties
-				.getProperty("BATCH_SIZE"))) {
+				.getProperty("RECORDS_PER_POST"))) {
 			noOfRecordsPerCall = Integer.parseInt(properties
-					.getProperty("BATCH_SIZE"));
+					.getProperty("RECORDS_PER_POST"));
 		}
 
 

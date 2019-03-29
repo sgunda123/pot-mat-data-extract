@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -219,7 +220,7 @@ public class AttributeExtractReportForPotentialMatches {
 		executorService.shutdown();
 		
 		for(Map.Entry<String, ReltioFileWriter> entry : reltioFilesMap.entrySet()) {
-			entry.getValue().close();
+			Util.close(entry.getValue());
 		}
 		if(processedCount > 0) {
 			printPerformanceLog(executorService.getCompletedTaskCount()
@@ -292,7 +293,10 @@ public class AttributeExtractReportForPotentialMatches {
 			} catch (Exception e) {
 				// ignore it...
 			}
-			for (Future<Long> future : new ArrayList<Future<Long>>(futures)) {
+			
+			Iterator<Future<Long>> itr = futures.iterator();
+			while (itr.hasNext()) {
+				Future<Long> future = itr.next();
 				if (future.isDone()) {
 					try {
 						totalResult += future.get();
