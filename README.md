@@ -8,6 +8,10 @@ The Potential match Extract utility helps to extract the Reltio Matched Entities
 
 ```
 #!plaintext
+Last Update Date: 29/03/2019
+Version: 1.2.4
+Description: Performance Changes and And Attribute Encryption changes
+
 Last Update Date: 13/12/2018
 Version: 1.2.3
 Description: Added performance log,Improved Performance,Worked on jar size,upgraded cst-core version
