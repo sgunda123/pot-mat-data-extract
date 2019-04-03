@@ -86,61 +86,66 @@ public class PMExtractTask implements Callable<Long>{
 
 				int offset = 0;
 				int limit = extractProperties.getLimit();
+				boolean matchPresent = true;
+				while (matchPresent) {
 
-				if(matchType==null||matchType.equalsIgnoreCase("")||matchType.equalsIgnoreCase("false")){
-					getResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri +"/_matches?deep=1&"+String.format(OFFSET_LIMIT, offset, limit)+"&select="+getSelectFields());								
+					if(matchType==null||matchType.equalsIgnoreCase("")||matchType.equalsIgnoreCase("false")){
+						getResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri +"/_matches?deep=1&"+String.format(OFFSET_LIMIT, offset, limit)+"&select="+getSelectFields());								
 
-				}else{
-					getResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri +"/_matches?"+String.format(OFFSET_LIMIT, offset, limit)+"&select="+getSelectFields());								
-				}
+					}else{
+						getResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri +"/_matches?"+String.format(OFFSET_LIMIT, offset, limit)+"&select="+getSelectFields());								
+					}
 
-				LOGGER.info("Scanning Records with Max =  " + limit+",  offset = "+offset+" uri = "+objectsToProces.uri);
-				offset = offset+limit;
+					LOGGER.info("Scanning matches for "+objectsToProces.uri+ " with Max =  " + limit+",  offset = "+offset);
+					offset = offset+limit;
 
-				if (getResponse !=null && getResponse.contains("uri")) {
+					if (getResponse !=null && getResponse.contains("uri")) {
 
-					String drivGetResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri);
-					// Convert the string the java object
-					ReltioObject drivReltioObject = GSON.fromJson(drivGetResponse,ReltioObject.class);
+						String drivGetResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri);
+						// Convert the string the java object
+						ReltioObject drivReltioObject = GSON.fromJson(drivGetResponse,ReltioObject.class);
 
-					//System.out.println(getResponse);
-					Map<String, String> responseMap = getXrefResponse(drivReltioObject, attributes, extractProperties );
+						//System.out.println(getResponse);
+						Map<String, String> responseMap = getXrefResponse(drivReltioObject, attributes, extractProperties );
 
-					String[] finalResponse = objectArrayToStringArray(filterMapToObjectArray(responseMap, responseHeader));	
+						String[] finalResponse = objectArrayToStringArray(filterMapToObjectArray(responseMap, responseHeader));	
 
-					JSONObject object = (JSONObject)GSON.fromJson(getResponse, new TypeToken<JSONObject>() {  } .getType());
-					if(object!= null && !object.isEmpty() ){
-						Iterator<String> objItr = object.keySet().iterator();
+						JSONObject object = (JSONObject)GSON.fromJson(getResponse, new TypeToken<JSONObject>() {  } .getType());
+						if(object!= null && !object.isEmpty() ){
+							Iterator<String> objItr = object.keySet().iterator();
 
-						while (objItr.hasNext()) {
-							String ruleName = objItr.next();
-							List<HObject> objects = GSON.fromJson(GSON.toJson(((List)object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {  } .getType());
-							if (targetRuleName.equals("AllRules") || ruleName.equalsIgnoreCase(targetRuleName)) {
-								for(HObject obj: objects){
+							while (objItr.hasNext()) {
+								String ruleName = objItr.next();
+								List<HObject> objects = GSON.fromJson(GSON.toJson(((List)object.get(ruleName))), new TypeToken<ArrayList<HObject>>() {  } .getType());
+								if (targetRuleName.equals("AllRules") || ruleName.equalsIgnoreCase(targetRuleName)) {
+									for(HObject obj: objects){
 
-									ReltioObject matchReltioObject = obj.object;
+										ReltioObject matchReltioObject = obj.object;
 
-									Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes, extractProperties);
+										Map<String, String> responseMatchMap = getXrefResponse(matchReltioObject, attributes, extractProperties);
 
-									//System.out.println(getXrefResponse(matchReltioObject, attributes));
-									//Does not have all names here
-									String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));	
+										//System.out.println(getXrefResponse(matchReltioObject, attributes));
+										//Does not have all names here
+										String[] finalMatchResponse = objectArrayToStringArray(filterMapToObjectArray(responseMatchMap, responseHeader));	
 
-									String[] matRule= {matchRules.get(ruleName)};
+										String[] matRule= {matchRules.get(ruleName)};
 
-									String[] merg =ArrayUtils.addAll(matRule, concatArray(finalResponse,finalMatchResponse));
+										String[] merg =ArrayUtils.addAll(matRule, concatArray(finalResponse,finalMatchResponse));
 
-									getFileToWrite(matRule[0]).writeToFile(merg);
+										getFileToWrite(matRule[0]).writeToFile(merg);
 
+									}
 								}
+
 							}
+						}	
 
-						}
-					}	
+					}else {
+						matchPresent = false;
+						break;
+					}									
 
-				}								
-
-
+				}
 
 			} catch (Exception e) {
 				e.printStackTrace();
