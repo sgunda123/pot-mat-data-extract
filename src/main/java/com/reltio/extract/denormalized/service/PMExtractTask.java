@@ -148,7 +148,6 @@ public class PMExtractTask implements Callable<Long>{
 				}
 
 			} catch (Exception e) {
-				e.printStackTrace();
 				LOGGER.error("Error while processing the Protential Matches. Object URI = "+objectsToProces.uri, e);
 			}
 		}

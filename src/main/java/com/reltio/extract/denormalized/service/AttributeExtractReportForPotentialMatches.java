@@ -181,7 +181,7 @@ public class AttributeExtractReportForPotentialMatches {
 				// Convert the string the java object
 				ScanResponse scanResponseObj = GSON.fromJson(scanResponse,ScanResponse.class);
 
-				if (scanResponseObj.getObjects() != null && scanResponseObj.getObjects().size() > 0 && extractProperties.getSampleSize() > count || extractProperties.getSampleSize() == 0)  {
+				if (scanResponseObj.getObjects() != null && scanResponseObj.getObjects().size() > 0 && (extractProperties.getSampleSize() > count || extractProperties.getSampleSize() == 0))  {
 
 					count += scanResponseObj.getObjects().size();
 					LOGGER.info("Scaned records count = " + count);
@@ -291,7 +291,7 @@ public class AttributeExtractReportForPotentialMatches {
 			try {
 				Thread.sleep(20);
 			} catch (Exception e) {
-				// ignore it...
+				LOGGER.error("Ignoring the error", e);
 			}
 			
 			Iterator<Future<Long>> itr = futures.iterator();
@@ -302,8 +302,7 @@ public class AttributeExtractReportForPotentialMatches {
 						totalResult += future.get();
 						futures.remove(future);
 					} catch (Exception e) {
-						LOGGER.error(e.getMessage());
-						LOGGER.debug(e);
+						LOGGER.error("Ignoring the error", e);
 					}
 				}
 			}
@@ -328,15 +327,19 @@ public class AttributeExtractReportForPotentialMatches {
 		urlBuilder.append("filter=equals(type,'configuration/entityTypes/");
 		urlBuilder.append(extractProperties.getEntityType());
 		urlBuilder.append("') and range(matches,");
-		urlBuilder.append(extractProperties.getMin()+","+extractProperties.getMax()+")");
+		urlBuilder.append(extractProperties.getMin());
+		urlBuilder.append(",");
+		urlBuilder.append(extractProperties.getMax());
+		urlBuilder.append(")");
 
 		if(!targetRuleName.equals("AllRules")) {
-			urlBuilder.append("and equals(matchRules,'"+targetRuleName+"')");
+			urlBuilder.append("and equals(matchRules,'");
+			urlBuilder.append(targetRuleName).append("')");
 		}
 
 		
 		if(extractProperties.getFilterCondition() != null && !extractProperties.getFilterCondition().isEmpty()) {
-			urlBuilder.append(" and "+extractProperties.getFilterCondition());
+			urlBuilder.append(" and ").append(extractProperties.getFilterCondition());
 
 		}
 
