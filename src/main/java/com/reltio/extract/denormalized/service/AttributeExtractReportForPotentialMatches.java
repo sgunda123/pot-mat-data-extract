@@ -242,37 +242,21 @@ public class AttributeExtractReportForPotentialMatches {
 	public static void printPerformanceLog(long totalTasksExecuted,
 			long totalTasksExecutionTime,
 			long programStartTime, long numberOfThreads) {
-		LOGGER.info("[Performance]: ============= Current performance status ("
-				+ new Date().toString() + ") =============");
+		
+		StringBuilder performanceLogBuilder = new StringBuilder(); 
+		performanceLogBuilder.append("\n[Performance]: ============= Current performance status (%s) ============= \n [Performance]:  Total processing time : %s \n [Performance]:  Match Pairs extracted for Entities: %s ")
+				.append("\n [Performance]:  Total OPS (Match Pairs extracted for Entities / Time spent from program start):  %s \n [Performance]:  Total OPS without waiting for queue (Match Pairs extracted for Entities / (Time spent from program start - Time spent in waiting for API queue)): %s")
+				.append("\n [Performance]:  API Server data load requests OPS (Match Pairs extracted for Entities / (Sum of time spend by API requests / Threads count)):  %s \n [Performance]: =============================================================================================================== \n");
+
+		
 		long finalTime = System.currentTimeMillis() - programStartTime;
-		LOGGER.info("[Performance]:  Total processing time : "
-				+ finalTime);
 
-		LOGGER.info("[Performance]:  Match Pairs extracted for Entities: "
-				+ totalTasksExecuted);
-		LOGGER.info("[Performance]:  Total OPS (Match Pairs extracted for Entities / Time spent from program start): "
-				+ (totalTasksExecuted / (finalTime / 1000f)));
-		LOGGER.info("[Performance]:  Total OPS without waiting for queue (Match Pairs extracted for Entities / (Time spent from program start - Time spent in waiting for API queue)): "
-				+ (totalTasksExecuted / ((finalTime) / 1000f)));
-		LOGGER.info("[Performance]:  API Server data load requests OPS (Match Pairs extracted for Entities / (Sum of time spend by API requests / Threads count)): "
-				+ (totalTasksExecuted / ((totalTasksExecutionTime / numberOfThreads) / 1000f)));
-		LOGGER.info("[Performance]: ===============================================================================================================");
+		String performanceLog = performanceLogBuilder.toString();
+		LOGGER.info(String.format(performanceLog, new Date().toString(), finalTime, totalTasksExecuted, (totalTasksExecuted / (finalTime / 1000f)), 
+				(totalTasksExecuted / ((finalTime) / 1000f)), (totalTasksExecuted / ((totalTasksExecutionTime / numberOfThreads) / 1000f))));
 
-		//log performance only in separate logs
-		logPerformance.info("[Performance]: ============= Current performance status ("
-				+ new Date().toString() + ") =============");
-		logPerformance.info("[Performance]:  Total processing time : "
-				+ finalTime);
-
-		logPerformance.info("[Performance]:  Entities sent: "
-				+ totalTasksExecuted);
-		logPerformance.info("[Performance]:  Total OPS (Match Pairs extracted for Entities / Time spent from program start): "
-				+ (totalTasksExecuted / (finalTime / 1000f)));
-		logPerformance.info("[Performance]:  Total OPS without waiting for queue (Match Pairs extracted for Entities / (Time spent from program start - Time spent in waiting for API queue)): "
-				+ (totalTasksExecuted / ((finalTime) / 1000f)));
-		logPerformance.info("[Performance]:  API Server data load requests OPS (Match Pairs extracted for Entities / (Sum of time spend by API requests / Threads count)): "
-				+ (totalTasksExecuted / ((totalTasksExecutionTime / numberOfThreads) / 1000f)));
-		logPerformance.info("[Performance]: ===============================================================================================================");
+		logPerformance.info(String.format(performanceLog, new Date().toString(), finalTime, totalTasksExecuted, (totalTasksExecuted / (finalTime / 1000f)), 
+				(totalTasksExecuted / ((finalTime) / 1000f)), (totalTasksExecuted / ((totalTasksExecutionTime / numberOfThreads) / 1000f))));
 	}
 
 	/**
@@ -291,7 +275,7 @@ public class AttributeExtractReportForPotentialMatches {
 			try {
 				Thread.sleep(20);
 			} catch (Exception e) {
-				LOGGER.error("Ignoring the error", e);
+				LOGGER.error("Ignoring the error");
 			}
 			
 			Iterator<Future<Long>> itr = futures.iterator();
@@ -300,9 +284,9 @@ public class AttributeExtractReportForPotentialMatches {
 				if (future.isDone()) {
 					try {
 						totalResult += future.get();
-						futures.remove(future);
+						itr.remove();
 					} catch (Exception e) {
-						LOGGER.error("Ignoring the error", e);
+						LOGGER.error("Ignoring the error");
 					}
 				}
 			}
