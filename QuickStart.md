@@ -77,6 +77,6 @@ Command to start the utility.
 ```
 #!plaintext
 
-java -jar pot-mat-extract-{$version}.jar  job_configuration.properties > $logfilepath$
+java -jar pot-mat-extract-{$version}-jar-with-dependencies.jar  job_configuration.properties > $logfilepath$
 
 ```
