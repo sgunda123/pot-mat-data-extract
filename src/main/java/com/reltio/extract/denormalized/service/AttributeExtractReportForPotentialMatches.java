@@ -74,6 +74,7 @@ public class AttributeExtractReportForPotentialMatches {
 		final ExtractProperties extractProperties = new ExtractProperties(
 				config);
 
+		Util.setHttpProxy(config);
 
 		String targetRuleName;
 		if(extractProperties.getTargetRule() != null && !extractProperties.getTargetRule().isEmpty())
