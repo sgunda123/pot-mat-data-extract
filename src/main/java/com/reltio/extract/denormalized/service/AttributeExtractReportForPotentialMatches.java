@@ -58,10 +58,12 @@ public class AttributeExtractReportForPotentialMatches {
 
 		LOGGER.info("Extract Process Started..");
 		long programStartTime = System.currentTimeMillis();
-		Properties config = Util.getProperties(args[0], "PASSWORD");
+		Properties config = Util.getProperties(args[0], "PASSWORD", "CLIENT_CREDENTIALS");
 
+		Map<List<String>, List<String>> mutualExclusiveProps = new HashMap<>();
+		mutualExclusiveProps.put(Arrays.asList("PASSWORD","USERNAME"), Arrays.asList("CLIENT_CREDENTIALS"));
 		List<String> missingKeys = Util.listMissingProperties(config,
-				Arrays.asList("ENTITY_TYPE","ENVIRONMENT_URL","USERNAME", "AUTH_URL", "PASSWORD", "FILE_FORMAT", "ENVIRONMENT_URL", "TENANT_ID", "OUTPUT_FILE","TRANSITIVE_MATCH"));
+				Arrays.asList("ENTITY_TYPE","ENVIRONMENT_URL", "AUTH_URL", "FILE_FORMAT", "ENVIRONMENT_URL", "TENANT_ID", "OUTPUT_FILE","TRANSITIVE_MATCH"), mutualExclusiveProps);
 
 
 		if (!missingKeys.isEmpty()) {

@@ -9,6 +9,11 @@ The Potential match Extract utility helps to extract the Reltio Matched Entities
 ```
 #!plaintext
 
+Last Update Date: 23/09/2019
+Version: 1.3.1
+Description: Standardized the Jar name, Added Client Credential authentication capability
+
+
 Last Update Date: 27/06/2019
 Version: 1.3
 Description: Standardized the Jar name, Changed the group name, Added proxy capabilities
