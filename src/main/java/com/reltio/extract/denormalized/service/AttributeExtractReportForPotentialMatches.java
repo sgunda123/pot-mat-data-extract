@@ -24,9 +24,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.reltio.cst.service.ReltioAPIService;
-import com.reltio.cst.service.TokenGeneratorService;
-import com.reltio.cst.service.impl.SimpleReltioAPIServiceImpl;
-import com.reltio.cst.service.impl.TokenGeneratorServiceImpl;
 import com.reltio.cst.util.Util;
 import com.reltio.extract.domain.Attribute;
 import com.reltio.extract.domain.Configuration;
@@ -88,11 +85,7 @@ public class AttributeExtractReportForPotentialMatches {
 		}
 
 
-		TokenGeneratorService tokenGeneratorService = new TokenGeneratorServiceImpl(
-				extractProperties.getUsername(),
-				extractProperties.getPassword(), extractProperties.getAuthUrl());
-		final ReltioAPIService reltioAPIService = new SimpleReltioAPIServiceImpl(
-				tokenGeneratorService);
+		final ReltioAPIService reltioAPIService = Util.getReltioService(config);
 
 
 		String configRes = reltioAPIService.get(extractProperties.getApiUrl()+"/configuration/_noInheritance");
