@@ -3,8 +3,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.reltio.rocs</groupId>
-	<artifactId>pot-mat-extract</artifactId>
-	<version>1.3</version>
+	<artifactId>reltio-util-pot-mat-extract</artifactId>
+	<version>1.3.1</version>
 	<name>pot-mat-extract</name>
 
 	<properties>
@@ -16,7 +16,7 @@
 		<dependency>
 			<groupId>com.reltio.rocs</groupId>
 			<artifactId>reltio-cst-core</artifactId>
-			<version>1.4.7</version>
+			<version>1.4.9</version>
 			<exclusions>
 				<exclusion>  <!-- declare the exclusion here -->
 					<groupId>org.apache.tika</groupId>

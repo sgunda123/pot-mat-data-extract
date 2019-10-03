@@ -9,7 +9,7 @@ The main method of the application is at the following path:
 ##Dependencies 
 
 1. gson-2.2.4
-2. reltio-cst-core-1.4.7
+2. reltio-cst-core-1.4.9
 
 ##Parameters File Example
 
@@ -22,6 +22,10 @@ AUTH_URL=https://auth.reltio.com/oauth/token
 USERNAME=*****
 PASSWORD=*****
 THREAD_COUNT=20
+
+#This property used for to get the access token using client_credentials grant type. The value for this property can be obtained by encoding the client name and secret separated by colon in Base64 format. (clientname:clientsecret)
+CLIENT_CREDENTIALS=
+
 
 #Tool specific properties
 ENTITY_TYPE=HCP
@@ -37,6 +41,7 @@ TARGET_RULE=configuration/entityTypes/Individual/matchGroups/Rule5
 SAMPLE_SIZE=1000
 HTTP_PROXY_HOST=<<Proxy Host>>
 HTTP_PROXY_PORT=<<Proxy Port>>
+
 
 ```
 
