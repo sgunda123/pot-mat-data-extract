@@ -77,8 +77,6 @@ public class PMExtractTask implements Callable<Long>{
 		long startTime = System.currentTimeMillis();
 		long requestExecutionTime = 0l;
 
-		final String matchType=extractProperties.getTransitive_match();
-
 		for (final ReltioObject objectsToProces : objectsToProcess) {	
 
 			try {
@@ -89,7 +87,7 @@ public class PMExtractTask implements Callable<Long>{
 				boolean matchPresent = true;
 				while (matchPresent) {
 
-					if(matchType==null||matchType.equalsIgnoreCase("")||matchType.equalsIgnoreCase("false")){
+					if(!extractProperties.isFetchTransitiveMatches()){
 						getResponse = reltioAPIService.get(apiUrl+"/"+ objectsToProces.uri +"/_matches?deep=1&"+String.format(OFFSET_LIMIT, offset, limit)+"&select="+getSelectFields());								
 
 					}else{
@@ -189,7 +187,9 @@ public class PMExtractTask implements Callable<Long>{
 			if(!extractProperties.isExtractPerRule()) {
 				filePath = extractProperties.getOutputFilePath();
 			}else {
-				filePath = extractProperties.getOutputFilePath().substring(0, extractProperties.getOutputFilePath().lastIndexOf(File.separator))+File.separator+name+".csv";
+				
+				String fileName = name.replaceAll("[^0-9a-zA-Z]+", "_");
+				filePath = extractProperties.getOutputFilePath().substring(0, extractProperties.getOutputFilePath().lastIndexOf(File.separator))+File.separator+fileName+".csv";
 			}
 
 
