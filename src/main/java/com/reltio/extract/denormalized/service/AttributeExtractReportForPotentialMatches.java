@@ -60,7 +60,7 @@ public class AttributeExtractReportForPotentialMatches {
 		Map<List<String>, List<String>> mutualExclusiveProps = new HashMap<>();
 		mutualExclusiveProps.put(Arrays.asList("PASSWORD","USERNAME"), Arrays.asList("CLIENT_CREDENTIALS"));
 		List<String> missingKeys = Util.listMissingProperties(config,
-				Arrays.asList("ENTITY_TYPE","ENVIRONMENT_URL", "AUTH_URL", "FILE_FORMAT", "ENVIRONMENT_URL", "TENANT_ID", "OUTPUT_FILE","TRANSITIVE_MATCH"), mutualExclusiveProps);
+				Arrays.asList("ENTITY_TYPE","ENVIRONMENT_URL", "AUTH_URL", "FILE_FORMAT", "ENVIRONMENT_URL", "TENANT_ID", "OUTPUT_FILE"), mutualExclusiveProps);
 
 
 		if (!missingKeys.isEmpty()) {

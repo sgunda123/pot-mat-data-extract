@@ -33,7 +33,7 @@ public class ExtractProperties implements Serializable {
 	private String fileDelimiter;
 	private String serverHostName;
 	private String tenantId;
-	private String transitive_match;
+	private boolean fetchTransitiveMatches;
 	private boolean extractAllValues;
 	private String targetRule;
 	private boolean extractPerRule;
@@ -67,9 +67,14 @@ public class ExtractProperties implements Serializable {
 		username = properties.getProperty("USERNAME");
 		password = properties.getProperty("PASSWORD");
 		isHeaderRequired = properties.getProperty("HEADER_REQUIRED");
-		setTransitive_match(properties.getProperty("TRANSITIVE_MATCH"));
 		fileFormat = properties.getProperty("FILE_FORMAT");
 		fileDelimiter = properties.getProperty("FILE_DELIMITER");
+		
+		
+		if(properties.getProperty("TRANSITIVE_MATCH") != null && !properties.getProperty("TRANSITIVE_MATCH").trim().isEmpty()) {
+			setFetchTransitiveMatches(Boolean.valueOf(properties.getProperty("TRANSITIVE_MATCH")));
+		}
+
 		
 		if(properties.getProperty("EXTRACT_ALL_VALUES") != null && !properties.getProperty("EXTRACT_ALL_VALUES").trim().isEmpty()) {
 			setExtractAllValues(Boolean.valueOf(properties.getProperty("EXTRACT_ALL_VALUES")));
@@ -430,14 +435,6 @@ public class ExtractProperties implements Serializable {
 		this.threadCount = threadCount;
 	}
 
-	public String getTransitive_match() {
-		return transitive_match;
-	}
-
-	public void setTransitive_match(String transitive_match) {
-		this.transitive_match = transitive_match;
-	}
-
 	/**
 	 * @return the noOfRecordsPerCall
 	 */
@@ -494,6 +491,20 @@ public class ExtractProperties implements Serializable {
 	 */
 	public void setExtractAllValues(boolean extractAllValues) {
 		this.extractAllValues = extractAllValues;
+	}
+
+	/**
+	 * @return the fetchTransitiveMatches
+	 */
+	public boolean isFetchTransitiveMatches() {
+		return fetchTransitiveMatches;
+	}
+
+	/**
+	 * @param fetchTransitiveMatches the fetchTransitiveMatches to set
+	 */
+	public void setFetchTransitiveMatches(boolean fetchTransitiveMatches) {
+		this.fetchTransitiveMatches = fetchTransitiveMatches;
 	}
 
 }

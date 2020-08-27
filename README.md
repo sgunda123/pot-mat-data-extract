@@ -8,6 +8,10 @@ The Potential match Extract utility helps to extract the Reltio Matched Entities
 
 ```
 #!plaintext
+Last Update Date: 19/08/2020
+Version: 1.3.2
+Description: Changed TRANSITIVE_MATCH parameter from String to boolean. Removed all special character from rule name while creating the file.
+
 
 Last Update Date: 23/09/2019
 Version: 1.3.1
