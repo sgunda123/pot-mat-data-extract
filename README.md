@@ -59,6 +59,6 @@ See the License for the specific language governing permissions and limitations 
 ```
 
 ## Quick Start 
-To learn about dependencies, building and executing the tool view our [quick start](https://bitbucket.org/reltio-ondemand/pot-mat-data-extract/src/7df2e84364018923e90eb57fb3c3dd2942d861bd/QuickStart.md?at=master&fileviewer=file-view-default).
+To learn about dependencies, building and executing the tool view our [quick start](https://bitbucket.org/reltio-ondemand/pot-mat-data-extract/src/master/QuickStart.md).
 
 
