@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.reltio.rocs</groupId>
 	<artifactId>reltio-util-pot-mat-extract</artifactId>
-	<version>1.3.2</version>
+	<version>1.3.3</version>
 	<name>pot-mat-extract</name>
 
 	<properties>
@@ -32,7 +32,7 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j-impl</artifactId>
-			<version>2.11.1</version>
+			<version>2.15.0</version>
 		</dependency>
 
 		<dependency>
