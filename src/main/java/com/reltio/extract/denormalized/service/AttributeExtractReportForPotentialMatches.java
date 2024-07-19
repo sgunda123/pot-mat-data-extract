@@ -306,20 +306,20 @@ public class AttributeExtractReportForPotentialMatches {
 
 		urlBuilder.append("filter=equals(type,'configuration/entityTypes/");
 		urlBuilder.append(extractProperties.getEntityType());
-		urlBuilder.append("') and range(matches,");
+		urlBuilder.append("') & range(matches,");
 		urlBuilder.append(extractProperties.getMin());
 		urlBuilder.append(",");
 		urlBuilder.append(extractProperties.getMax());
 		urlBuilder.append(")");
 
 		if(!targetRuleName.equals("AllRules")) {
-			urlBuilder.append("and equals(matchRules,'");
+			urlBuilder.append("& equals(matchRules,'");
 			urlBuilder.append(targetRuleName).append("')");
 		}
 
 		
 		if(extractProperties.getFilterCondition() != null && !extractProperties.getFilterCondition().isEmpty()) {
-			urlBuilder.append(" and ").append(extractProperties.getFilterCondition());
+			urlBuilder.append(" & ").append(extractProperties.getFilterCondition());
 
 		}
 
